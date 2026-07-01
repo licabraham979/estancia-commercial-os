@@ -7,6 +7,42 @@
   import Casosexito from '$lib/components/Casosexito.svelte';
   import Carousel from '$lib/components/Carousel.svelte';
   import Titulo from '$lib/components/Titulo.svelte';
+  import LeftPanel from '$lib/components/LeftPanel.svelte';
+  import QuoteForm from '$lib/components/QuoteForm.svelte';
+  import AccionFin from '$lib/components/AccionFin.svelte';
+
+  const procesoSteps = [
+    { 
+      id: 1, 
+      title: "VISITA", 
+      description: "Conocemos tu proyecto y tomamos medidas.", 
+      color: "bg-emerald-500" 
+    },
+    { 
+      id: 2, 
+      title: "DIAGNÓSTICO", 
+      description: "Analizamos y detectamos las mejores soluciones.", 
+      color: "bg-blue-500" 
+    },
+    { 
+      id: 3, 
+      title: "PROPUESTA", 
+      description: "Te presentamos la mejor opción para tu negocio.", 
+      color: "bg-amber-500" 
+    },
+    { 
+      id: 4, 
+      title: "INSTALACIÓN", 
+      description: "Ejecutamos el proyecto con calidad y profesionalismo.", 
+      color: "bg-purple-500" 
+    },
+    { 
+      id: 5, 
+      title: "GARANTÍA", 
+      description: "Respaldamos nuestro trabajo y seguimos contigo.", 
+      color: "bg-green-500" 
+    }
+  ];
 
   const misImágenes = [
     "https://res.cloudinary.com/licabraham939/image/upload/v1782770933/aestanciacomercial/cashless-payment_jwbhtj.png",
@@ -58,6 +94,15 @@
     borderColor: "border-t-2 border-t-[#60A378] border-b-2 border-b-[#60A378]", 
     // Hover: Un dorado un poco más oscuro manualmente
     hoverBg: "hover:bg-[]" 
+  }
+];
+    const buttons2: ButtonConfig[] = [
+  {
+    text: "SOLICITAR VÍA WHATSAPP",
+    href: "#servicios",
+    bgColor: "bg-green-500",
+    textColor: "text-white",
+    hoverBg: "hover:bg-green-700"
   }
 ];
 
@@ -167,6 +212,67 @@
     }
   ];
 
+  const cotizacionForm = [
+
+    {
+
+        label:"¿Qué necesitas?",
+
+        type:"select",
+
+        options:[
+
+            "Techos Industriales",
+
+            "Fachadas",
+
+            "Letras 3D",
+
+            "Viniles"
+
+        ]
+
+    },
+
+    {
+
+        label:"¿Cuántos metros aproximados?",
+
+        type:"select",
+
+        options:[
+
+            "50 m²",
+
+            "100 m²",
+
+            "150 m²",
+
+            "200 m²"
+
+        ]
+
+    },
+
+    {
+
+        label:"¿En qué ciudad estás?",
+
+        type:"select",
+
+        options:[
+
+            "La Ceiba",
+
+            "Tela",
+
+            "San Pedro Sula"
+
+        ]
+
+    }
+
+];
 </script>
 
 <Navbar />
@@ -322,16 +428,78 @@
   {/each}
 </div>
 </section>
-<!-- <div class="bg-red z-50">
-  <h2 class="text-3xl font-bold text-center text-[#E7A145] ">Nuestras Soluciones</h2>
+
+ <Titulo 
+  texto="NUESTROS"
+  textoHighlight=" PROCESOS"
+  background="bg-gray-50" 
+  textColor="text-black"
+  highlightColor="text-[#60A378]" 
+  blurAmount="backdrop-blur-md"
+  padding="py-12"
+/>
+
+ <Titulo 
+  texto="Así trabajamos para garantizar resultados de calidad"
+  textoHighlight=" "
+  background="bg-gray-50" 
+  textColor="text-black"
+  highlightColor="text-[#60A378]" 
+  blurAmount="backdrop-blur-md"
+  padding="py-12"
+/>
+
+    <!-- COLUMNA IZQUIERDA: Timeline -->
+    <section class="flex flex-col items-center justify-center bg-white relative">
+      <div class="">
+      <h2 class="text-2xl font-bold mb-6 text-center text-gray-800 dark:text-blue">
+        Proceso de Trabajo
+      </h2>
+      <!-- Aquí pasamos los datos del timeline -->
+      <LeftPanel steps={procesoSteps} />
+    </div>
+
+    </section>
+    
+
   
- 
-  <Casosexito images={misImágenes} intervalMs={5000} />
-</div> -->
+ <Titulo 
+  texto="CALCULA"
+  textoHighlight="TU PROYECTO"
+  background="bg-gray-50" 
+  textColor="text-black"
+  highlightColor="text-[#60A378]" 
+  blurAmount="backdrop-blur-md"
+  padding="py-12"
+/>
 
-<!-- <section class="z-50 relative">
-  <ServiceCard />
-  <ServiceCard />
-  <ServiceCard />
-</section> -->
+ <Titulo 
+  texto="Obtén una cotización rápida y personalizada"
+  textoHighlight=""
+  background="bg-gray-50" 
+  textColor="text-black"
+  highlightColor="text-[#60A378]" 
+  blurAmount="backdrop-blur-md"
+  padding="py-12"
+/>
+<QuoteForm
 
+fields={cotizacionForm}
+
+/>
+
+<div class="flex flex-col gap-4 items-center justify-center w-full max-w-sm mx-auto mt-8 z-10 relative">
+  {#each buttons2 as btn}
+    <Button {btn} />
+  {/each}
+</div>
+
+<AccionFin />
+
+ <!-- El contenido de tu página -->
+  <div class="pb-20"> 
+    <!-- El pb-20 es importante para que el contenido no quede tapado por la barra fija -->
+    <slot />
+  </div>
+  
+  <BottomNav />
