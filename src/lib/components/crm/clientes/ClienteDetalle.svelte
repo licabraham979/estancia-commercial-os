@@ -8,11 +8,20 @@ import ClienteEstado from './ClienteEstado.svelte';
 import ClienteCambiarEstado from './ClienteCambiarEstado.svelte';
 import ClienteProximaAccion from './ClienteProximaAccion.svelte';
 import ClienteContacto from './ClienteContacto.svelte';
+import ClienteInformacionEditar from './ClienteInformacionEditar.svelte';
 
-let {cliente} = $props();
+let {cliente = null} = $props();
+
+
 
 </script>
+{#if !cliente}
 
+<p>
+Cliente no encontrado
+</p>
+
+{:else}
 <div class="detalle">
 
 
@@ -116,6 +125,9 @@ Próxima acción
 
 </div>
 
+<ClienteInformacionEditar 
+    cliente={cliente}
+/>
 
 <ClienteTimeline
     actividades={cliente.actividades}
@@ -123,10 +135,10 @@ Próxima acción
 
 <ClienteArchivos />
 
-<ClienteNotas />
+<ClienteNotas clienteId={cliente.id} />
 
 </div>
-
+{/if}
 
 
 <style>

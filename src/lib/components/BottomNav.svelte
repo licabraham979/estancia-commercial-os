@@ -7,7 +7,7 @@
     { title: 'NOSOTROS', href: '/nosotros', icon: 'user' }
   ];
 
-  const whatsappUrl = 'https://wa.me/521234567890'; // Reemplaza con tu número
+  const whatsappUrl = 'https://wa.me/50433838386'; // Reemplaza con tu número
 </script>
 
 <nav class="fixed bottom-0 left-0 w-full bg-gray-900 text-gray-400 border-t border-gray-800 shadow-lg z-50">

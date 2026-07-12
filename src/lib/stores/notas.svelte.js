@@ -1,29 +1,47 @@
-let notas = $state([
+let notas = $state([]);
 
-    {
-        id:1,
-        clienteId:"oscar-guardado",
-        fecha:"Hoy",
-        texto:"Cliente interesado en mantenimiento completo del techo."
-    },
 
-    {
-        id:2,
-        clienteId:"oscar-guardado",
-        fecha:"Ayer",
-        texto:"Solicitó revisar opciones de precio."
+function guardarNotas(){
+
+    if(typeof localStorage === "undefined"){
+        return;
     }
 
-]);
+    localStorage.setItem(
+        "notas",
+        JSON.stringify(notas)
+    );
+
+}
+
+
+
+function cargarNotas(){
+
+    if(typeof localStorage === "undefined"){
+        return;
+    }
+
+
+    const datos = localStorage.getItem("notas");
+
+
+    if(datos){
+
+        notas.push(
+            ...JSON.parse(datos)
+        );
+
+    }
+
+}
 
 
 
 export function obtenerNotas(clienteId){
 
     return notas.filter(
-
         nota => nota.clienteId === clienteId
-
     );
 
 }
@@ -46,4 +64,9 @@ export function crearNota(datos){
     });
 
 
+    guardarNotas();
+
 }
+
+
+cargarNotas();

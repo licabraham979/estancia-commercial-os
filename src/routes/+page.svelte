@@ -99,7 +99,7 @@
     const buttons2: ButtonConfig[] = [
   {
     text: "SOLICITAR VÍA WHATSAPP",
-    href: "#servicios",
+    href: "https://wa.me/50433838386",
     bgColor: "bg-green-500",
     textColor: "text-white",
     hoverBg: "hover:bg-green-700"

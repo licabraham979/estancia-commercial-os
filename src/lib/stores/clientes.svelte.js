@@ -1,69 +1,4 @@
-let clientes = $state([
-
-    {
-        id:"oscar-guardado",
-        nombre:"Oscar Guardado",
-        empresa:"Hotel Palma",
-        telefono:"+504 9999-9999",
-        correo:"oscar@hotelpalma.com",
-        estado:"Cotización enviada",
-        proyecto:"Mantenimiento de techo",
-        valor:"L 35,000",
-        siguienteAccion:"Llamar viernes 10:00 AM",
-            
-            actividades:[
-                {
-                    fecha:"Hoy",
-                    titulo:"Cotización enviada",
-                    descripcion:"Se envió propuesta comercial."
-                }
-            ]
-    },
-
-
-    {
-        id:"carlos-perez",
-        nombre:"Carlos Pérez",
-        empresa:"Restaurante Azul",
-        telefono:"+504 9999-9999",
-        correo:"carlos@hotelpalma.com",
-        estado:"Inspección pendiente",
-        proyecto:"Revisión de fachada",
-        valor:"L 20,000",
-        siguienteAccion:"Agendar visita",
-
-            actividades:[
-                {
-                    fecha:"Hoy",
-                    titulo:"Cotización enviada",
-                    descripcion:"Se envió propuesta comercial."
-                }
-            ]
-    },
-
-
-    {
-        id:"maria-lopez",
-        nombre:"María López",
-        empresa:"Constructora Norte",
-        telefono:"+504 9769-9999",
-        correo:"maria@hotelpalma.com",
-        estado:"Seguimiento",
-        proyecto:"Rótulo comercial",
-        valor:"L 60,000",
-        siguienteAccion:"Enviar propuesta",
-
-            actividades:[
-                {
-                    fecha:"Hoy",
-                    titulo:"Cotización enviada",
-                    descripcion:"Se envió propuesta comercial."
-                }
-            ]
-    }
-
-]);
-
+let clientes = $state([]);
 
 
 export function obtenerClientes(){
@@ -196,6 +131,10 @@ guardarClientes();
 
 function guardarClientes(){
 
+    if(typeof localStorage === "undefined"){
+        return;
+    }
+
     localStorage.setItem(
         "clientes",
         JSON.stringify(clientes)
@@ -211,8 +150,7 @@ function cargarClientes(){
     }
 
 
-    const datos =
-    localStorage.getItem("clientes");
+    const datos = localStorage.getItem("clientes");
 
 
     if(datos){
@@ -229,4 +167,38 @@ function cargarClientes(){
 }
 
 
-cargarClientes();
+if (typeof window !== "undefined") {
+    cargarClientes();
+}
+
+
+export function actualizarCliente(id, datos){
+
+    const cliente = clientes.find(
+        cliente => cliente.id === id
+    );
+
+
+    if(cliente){
+
+        cliente.proyecto = datos.proyecto;
+        cliente.valor = datos.valor;
+        cliente.siguienteAccion = datos.siguienteAccion;
+
+
+        cliente.actividades.unshift({
+
+            fecha:"Ahora",
+
+            titulo:"Información actualizada",
+
+            descripcion:"Se actualizaron datos comerciales del cliente."
+
+        });
+
+
+        guardarClientes();
+
+    }
+
+}

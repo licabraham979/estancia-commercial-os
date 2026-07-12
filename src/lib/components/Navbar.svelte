@@ -53,12 +53,12 @@
                 >Servicios</a
             >
             <a
-                href="#nosotros"
+                href="https://www.facebook.com/profile.php?id=61591619660174"
                 class="text-sm font-medium hover:text-orange-400 transition-colors"
                 >Nosotros</a
             >
             <a
-                href="#contacto"
+                href="https://wa.me/50433838386"
                 class="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md font-medium transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
             >
                 Contáctanos

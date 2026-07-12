@@ -11,6 +11,9 @@ const clientes = obtenerClientes();
 
 <div class="container">
 
+<a class="nuevo" href="/crm/clientes/nuevo">
+    + Nuevo Cliente
+</a>
 
 <h1>
 Clientes
@@ -50,6 +53,23 @@ padding:var(--space-6);
 
 }
 
+.nuevo {
+
+display:inline-block;
+
+margin-top:20px;
+
+padding:12px 18px;
+
+background:#2563eb;
+
+color:white;
+
+text-decoration:none;
+
+border-radius:8px;
+
+}
 
 h1 {
 
@@ -77,6 +97,8 @@ grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
 gap:var(--space-4);
 
 }
+
+
 
 
 </style>
