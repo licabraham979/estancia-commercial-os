@@ -1,0 +1,11 @@
+# SvelteKit
+.svelte-kit/
+
+# Vercel
+.vercel/
+
+# Dependencias
+node_modules/
+
+# Build
+build/
