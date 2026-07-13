@@ -15,6 +15,10 @@
 			ruta: '/crm/pipeline'
 		},
 		{
+			nombre: 'Campañas',
+			ruta: '/crm/campanas'
+		},
+		{
 			nombre: 'Nuevo Cliente',
 			ruta: '/crm/clientes/nuevo'
 		}
