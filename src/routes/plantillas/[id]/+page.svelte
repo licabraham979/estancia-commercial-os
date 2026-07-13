@@ -4,7 +4,7 @@
 	import { plantillas } from '$lib/stores/plantillas.js';
 
 
-	const id = $derived(page.params.id);
+	let id = $derived(page.params.id);
 
 
 	const plantilla = $derived(

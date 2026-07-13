@@ -6,17 +6,17 @@
 	import { goto } from '$app/navigation';
 
 
-	const id = $derived(page.params.id);
+	let id = $derived(page.params.id);
 
 
-	const campaña = $derived(
+	let campaña = $derived(
 		$campanas.find(
 			c => c.id === id
 		)
 	);
 
 
-	const mensajes = $derived(
+	let mensajes = $derived(
 		$plantillas.filter(
 			p => p.campana === id
 		)
@@ -37,7 +37,9 @@
 	goto(`/crm/campanas/plantillas/${id}`);
 
 }
-
+	function nuevaPlantilla() {
+    goto(`/crm/campanas/plantillas/nueva?campana=${id}`);
+}
 </script>
 
 
@@ -87,8 +89,8 @@
 	Plantillas de mensajes
 </h2>
 
-<button class="agregar">
-	+ Agregar plantilla
+<button class="agregar" onclick={nuevaPlantilla}>
+    + Agregar plantilla
 </button>
 
 <div class="plantillas">
@@ -144,6 +146,8 @@
 
 
 </div>
+
+
 
 
 {/if}
