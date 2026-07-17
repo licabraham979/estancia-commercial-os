@@ -94,11 +94,13 @@ No hay seguimientos registrados.
 
 {/if}
 
-{#if cliente.diasSinContacto > 0}
+{#if cliente.tiempoSinContacto}
+
+
 
 <p class="dias">
 
-⏳ {cliente.diasSinContacto}
+⏳ {cliente.tiempoSinContacto}
 días sin contacto
 
 </p>

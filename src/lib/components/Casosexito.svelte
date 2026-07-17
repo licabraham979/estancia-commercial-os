@@ -9,7 +9,8 @@
   let emblaNode = $state();
   let emblaApi = $state();
   let selectedIndex = $state(0);
-  let timer = $state(null);
+  /** @type {ReturnType<typeof setInterval> | null} */
+let timer = null;
 
   // 3. Definir Imágenes por defecto (Constante segura)
   const defaultImages = [
@@ -76,12 +77,14 @@
     }
   };
 
-  const scrollTo = (index) => {
+ /**
+ * @param {number} index
+ */
+const scrollTo = (index) => {
     if (emblaApi) {
-      emblaApi.scrollTo(index);
-      stopAutoPlay();
+        emblaApi.scrollTo(index);
     }
-  };
+};
 
   onMount(() => {
     initEmbla();

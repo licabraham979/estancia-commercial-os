@@ -3,54 +3,51 @@
 import { actividadesStore } from '$lib/stores/actividades.svelte.js';
 
 
-const acciones = [
+const actions = [
 
 {
-    titulo:'Llamada cliente',
-    icono:'📞',
-    texto:'Registrar llamada pendiente',
-    categoria:1
+title:"Nuevo cliente",
+description:"Registrar prospecto",
+texto:"Registrar nuevo cliente",
+categoriaId:1
 },
 
 {
-    titulo:'Prospectar',
-    icono:'👤',
-    texto:'Prospectar nuevas empresas',
-    categoria:1
+title:"Nueva cotización",
+description:"Crear propuesta comercial",
+texto:"Crear nueva cotización",
+categoriaId:2
 },
 
 {
-    titulo:'Cotización',
-    icono:'📋',
-    texto:'Crear cotización',
-    categoria:1
+title:"Nueva visita",
+description:"Agendar inspección",
+texto:"Nueva visita",
+categoriaId:3
 },
 
 {
-    titulo:'Ejercicio',
-    icono:'🏃',
-    texto:'Ejercicio del día',
-    categoria:3
-},
-
-{
-    titulo:'Curso',
-    icono:'📚',
-    texto:'Continuar curso pendiente',
-    categoria:2
+title:"Registrar pago",
+description:"Actualizar cobros",
+texto:"Registrar pago",
+categoriaId:4
 }
 
 ];
 
-
+/**
+ * @param {{
+ *  texto:string,
+ *  categoriaId:number
+ * }} accion
+ */
 function ejecutar(accion){
 
     if(!accion.texto) return;
 
-
     actividadesStore.crearActividad(
         accion.texto,
-        accion.categoria
+        accion.categoriaId
     );
 
 }
@@ -58,38 +55,35 @@ function ejecutar(accion){
 </script>
 
 
-
 <div class="actions">
 
-{#each acciones as accion}
+<h2>
+Acciones rápidas
+</h2>
 
 
-<button onclick={()=>ejecutar(accion)}>
+<div class="grid">
 
+{#each actions as action}
 
-<span>
-{accion.icono}
-</span>
+<button 
+class="action"
+onclick={() => ejecutar(action)}
+>
 
-
-<div>
-
-<strong>
-{accion.titulo}
-</strong>
-
-
-<small>
-{accion.texto}
-</small>
-
+<div class="title">
+{action.title}
 </div>
 
+<div class="description">
+{action.description}
+</div>
 
 </button>
 
-
 {/each}
+
+</div>
 
 </div>
 

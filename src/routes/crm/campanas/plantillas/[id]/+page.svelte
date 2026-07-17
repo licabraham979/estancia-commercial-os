@@ -1,14 +1,18 @@
 <script>
-	import { plantillas } from '$lib/stores/plantillas.js';
+import { plantillas } from '$lib/stores/plantillas.js';
 
-	let { params } = $props();
+let { params } = $props();
 
-	let plantilla = $derived(
-		$plantillas.find(
-			p => p.id === Number(params.id)
-		)
-	);
+let plantilla = $derived(
+    $plantillas.find(
+        p => p.id === Number(params.id)
+    )
+);
 
+let variables = $derived(
+    plantilla?.texto.match(/{(.*?)}/g)
+    ?.map(v => v.replace(/[{}]/g,'')) ?? []
+);
 </script>
 
 
@@ -67,13 +71,13 @@
 		</h3>
 
 
-		{#each plantilla.variables as variable}
+		{#each variables as variable}
 
-			<span class="tag">
-				{variable}
-			</span>
+<span class="tag">
+    {variable}
+</span>
 
-		{/each}
+{/each}
 
 	</div>
 

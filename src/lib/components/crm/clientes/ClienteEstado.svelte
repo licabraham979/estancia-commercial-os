@@ -40,15 +40,20 @@ const estados = {
 };
 
 
+/**
+ * @type {keyof typeof estados}
+ */
+let estadoSeguro = estado in estados
+    ? estado
+    : "Nuevo contacto";
+
+
 let actual = $derived(
-    estados[estado] ?? estados["Nuevo contacto"]
+    estados[estadoSeguro]
 );
 
 
 </script>
-
-
-
 <div class={`status ${actual.color}`}>
 
 <span>

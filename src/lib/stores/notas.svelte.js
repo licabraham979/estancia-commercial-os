@@ -42,7 +42,9 @@ function cargarNotas(){
 
 
 
-export function obtenerNotas(clienteId){
+    export function obtenerNotas(
+    /** @type {number|string} */ clienteId
+){
 
     return notas.filter(
         nota => nota.clienteId === clienteId
@@ -52,8 +54,16 @@ export function obtenerNotas(clienteId){
 
 
 
-export function crearNota(datos){
+   /**
+ * @typedef {Object} NuevaNota
+ * @property {string|number} clienteId
+ * @property {string} texto
+ */
 
+/**
+ * @param {NuevaNota} datos
+ */
+export function crearNota(datos){
 
     notas.push({
 

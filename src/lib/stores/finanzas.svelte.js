@@ -6,34 +6,37 @@ let movimientos = $state(
 );
 
 
+/**
+ * @typedef {Object} MovimientoNuevo
+ * @property {string|number} clienteId
+ * @property {"ingreso"|"gasto"} tipo
+ * @property {string} concepto
+ * @property {number} monto
+ */
+
+/**
+ * @param {MovimientoNuevo} datos
+ */
 export function agregarMovimiento(datos){
 
-
     movimientos.push({
-
         id: Date.now(),
-
         clienteId: datos.clienteId,
-
         tipo: datos.tipo,
-
         concepto: datos.concepto,
-
         monto: datos.monto,
-
-        fecha:new Date().toISOString()
-
+        fecha: new Date().toISOString()
     });
 
-
     guardarMovimientos();
-
 }
 
 
 
 
-export function obtenerMovimientosCliente(clienteId){
+    export function obtenerMovimientosCliente(
+    /** @type {number|string} */ clienteId
+){
 
     return movimientos.filter(
         movimiento =>
@@ -45,7 +48,10 @@ export function obtenerMovimientosCliente(clienteId){
 
 
 
-export function resumenCliente(clienteId){
+
+    export function resumenCliente(
+    /** @type {number|string} */ clienteId
+){
 
 
 const movimientosCliente =

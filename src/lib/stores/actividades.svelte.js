@@ -163,23 +163,39 @@ get progreso(){
 
         this.actividades.unshift({
 
-            id: Date.now(),
-            clienteId:null,
-            campanaId:null,
-            titulo,
-            descripcion:'',
-            tipo:'habito',
-            categoriaId,
-            prioridad,
-            estado:'pendiente',
-            responsable:'usuario',
-            origen:'manual',
-            referencia:null,
-            fechaCreacion:new Date().toISOString(),
-            fechaObjetivo:null,
-            fechaCompletada:null
+    id: Date.now(),
 
-        });
+    clienteId:null,
+
+    campanaId:null,
+
+    titulo,
+
+    descripcion:'',
+
+    tipo:'habito',
+
+    categoriaId,
+
+    prioridad,
+
+    estado:'pendiente',
+
+    responsable:'usuario',
+
+    origen:'manual',
+
+    referencia:null,
+
+    fecha:new Date().toISOString(),
+
+    fechaCreacion:new Date().toISOString(),
+
+    fechaObjetivo:null,
+
+    fechaCompletada:null
+
+});
 
         this.guardar();
 
@@ -207,7 +223,10 @@ get progreso(){
 ){
     // pendiente
 }
-    completarActividad(id){
+/**
+ * @param {number|string} id
+ */
+completarActividad(id){
 
     const actividad = this.actividades.find(
         item => item.id === id
@@ -244,9 +263,9 @@ get actividadesPorCategoria(){
 }
 
 crearActividadCliente(
-    titulo,
-    clienteId,
-    categoriaId = 1
+    /** @type {string} */ titulo,
+    /** @type {number|string} */ clienteId,
+    /** @type {number} */ categoriaId = 1
 ){
 
     this.actividades.unshift({
@@ -273,7 +292,9 @@ crearActividadCliente(
 
         origen:'cliente',
 
-        referencia:clienteId,
+        referencia: clienteId,
+
+        fecha: new Date().toISOString(),
 
         fechaCreacion:new Date().toISOString(),
 

@@ -1,14 +1,22 @@
 /**
  * @typedef {Object} Actividad
  * @property {number|string} id
+ * @property {number|string|null} [clienteId]
+ * @property {number|string|null} [campanaId]
  * @property {string} titulo
  * @property {string} [descripcion]
  * @property {string} fecha
  * @property {string} estado
  * @property {string} prioridad
+ * @property {number} categoriaId
+ * @property {string} tipo
+ * @property {string} responsable
+ * @property {string} origen
+ * @property {string|number|null} [referencia]
  * @property {string} [fechaCreacion]
+ * @property {string|null} [fechaObjetivo]
+ * @property {string|null} [fechaCompletada]
  */
-
 
 /**
  * @typedef {Object} Movimiento

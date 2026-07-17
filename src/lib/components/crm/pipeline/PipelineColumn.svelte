@@ -1,46 +1,48 @@
-<script>
+    <script>
 
-import { cambiarEstado } from '$lib/stores/clientes.svelte';
-import ClientePipelineCard from './ClientePipelineCard.svelte';
-
-
-let {
-
-titulo,
-
-clientes
-
-} = $props();
+    import { cambiarEstado } from '$lib/stores/clientes.svelte';
+    import ClientePipelineCard from './ClientePipelineCard.svelte';
 
 
+    let {
 
-// function soltar(event){
+    titulo,
 
+    clientes
 
-// const clienteId =
-// event.dataTransfer.getData(
-// "clienteId"
-// );
+    } = $props();
 
 
 
-// cambiarEstado(
-// clienteId,
-// titulo
-// );
+    // function soltar(event){
+
+
+    // const clienteId =
+    // event.dataTransfer.getData(
+    // "clienteId"
+    // );
 
 
 
-// }
+    // cambiarEstado(
+    // clienteId,
+    // titulo
+    // );
+
+
+
+    // }
+  /**
+ * @param {DragEvent} event
+ */
 function soltar(event){
 
     event.preventDefault();
 
     const clienteId =
-        event.dataTransfer.getData("clienteId");
+        event.dataTransfer?.getData("clienteId");
 
-    console.log("DROP CLIENTE:", clienteId);
-    console.log("NUEVO ESTADO:", titulo);
+    if(!clienteId) return;
 
     cambiarEstado(
         clienteId,
@@ -48,7 +50,7 @@ function soltar(event){
     );
 
 }
-</script>
+    </script>
 
 
 <div

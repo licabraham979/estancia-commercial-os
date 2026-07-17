@@ -43,15 +43,31 @@ export function obtenerCliente(id){
 
         cliente.actividades ??= [];
 
-        cliente.actividades.unshift({
-            id: Date.now(),
-            fecha: new Date().toISOString(),
-            titulo: "Estado actualizado",
-            descripcion: `${estadoAnterior} → ${nuevoEstado}`,
-            estado: "completada",
-            prioridad: "media",
-            fechaCreacion: new Date().toISOString()
-        });
+       cliente.actividades.unshift({
+    id: Date.now(),
+
+    clienteId: cliente.id,
+    campanaId: null,
+
+    fecha: new Date().toISOString(),
+
+    titulo: "Estado actualizado",
+    descripcion: `${estadoAnterior} → ${nuevoEstado}`,
+
+    tipo: "sistema",
+    categoriaId: 1,
+
+    estado: "completada",
+    prioridad: "media",
+
+    responsable: "usuario",
+    origen: "cliente",
+
+    fechaCreacion: new Date().toISOString(),
+
+    fechaObjetivo: null,
+    fechaCompletada: new Date().toISOString()
+});
 
         guardarClientes();
     }
@@ -450,15 +466,14 @@ function calcularNivelSeguimiento(fecha){
     }
 
 
-    const ahora = new Date();
+const ahora = new Date();
 
-    const ultima = new Date(fecha);
+const ultima = new Date(fecha);
 
 
-    const horas =
-    (ahora - ultima) /
-    (1000 * 60 * 60);
-
+const horas =
+(ahora.getTime() - ultima.getTime()) /
+(1000 * 60 * 60);
 
 
     if(horas < 24){
@@ -503,21 +518,20 @@ function calcularNivelSeguimiento(fecha){
 
 
 }
+
 /**
  * @param {string|Date|null|undefined} fecha
+ * @param {string} [estado]
  */
-function calcularAccionSeguimiento(fecha, estado){
-
+function calcularAccionSeguimiento(fecha, estado = ""){
 
     const horas =
     fecha
     ?
-    Date.now() - new Date(fecha).getTime()
-    /
+    (Date.now() - new Date(fecha).getTime()) /
     (1000 * 60 * 60)
     :
     999;
-
 
 
     if(!fecha){
@@ -527,13 +541,11 @@ function calcularAccionSeguimiento(fecha, estado){
     }
 
 
-
     if(horas < 1){
 
         return "Continuar negociación";
 
     }
-
 
 
     if(horas < 24){
@@ -543,13 +555,11 @@ function calcularAccionSeguimiento(fecha, estado){
     }
 
 
-
     if(horas < 72){
 
         return "Realizar llamada";
 
     }
-
 
 
     if(
@@ -561,8 +571,6 @@ function calcularAccionSeguimiento(fecha, estado){
     }
 
 
-
-   return "Reactivar cliente";
+    return "Reactivar cliente";
 
 }
-

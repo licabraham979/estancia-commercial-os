@@ -6,7 +6,9 @@ let {
 
 
 
-function iconoActividad(actividad){
+    function iconoActividad(
+    /** @type {{titulo:string}} */ actividad
+){
 
     if(actividad.titulo.includes('Estado')){
         return '🔄';
@@ -39,7 +41,9 @@ function iconoActividad(actividad){
 
 
 
-function fechaBonita(fecha){
+    function fechaBonita(
+    /** @type {string} */ fecha
+){
 
     if(!fecha) return '';
 

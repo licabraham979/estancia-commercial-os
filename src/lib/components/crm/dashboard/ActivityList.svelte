@@ -38,17 +38,15 @@ Actividad reciente
 <div class="item">
 
 <div class="title">
-{activity.title}
+{activity.titulo}
 </div>
-
 
 <div class="client">
-{activity.client}
+Cliente: {activity.clienteId}
 </div>
 
-
 <div class="time">
-{activity.time}
+{activity.fechaCreacion}
 </div>
 
 </div>

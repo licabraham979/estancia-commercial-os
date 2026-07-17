@@ -34,19 +34,14 @@ export function obtenerEstadisticas(){
 
 
         valorTotal:
-        clientes.reduce(
-            (total, cliente)=>{
+clientes.reduce(
+    (total, cliente)=>{
 
-                return total + 
-                Number(
-                    cliente.valor
-                    .replace(/[^0-9]/g,'')
-                );
+        return total + Number(cliente.valor || 0);
 
-            },
-            0
-        )
-
+    },
+    0
+)
 
     };
 

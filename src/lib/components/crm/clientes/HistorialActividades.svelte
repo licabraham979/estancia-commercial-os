@@ -4,7 +4,6 @@ import { actividadesStore } from '$lib/stores/actividades.svelte.js';
 
 let { clienteId } = $props();
 
-
 const historial = $derived(
     actividadesStore.actividades
         .filter(
@@ -13,10 +12,10 @@ const historial = $derived(
         )
         .sort(
             (a,b)=> 
-            new Date(b.fechaCreacion) - new Date(a.fechaCreacion)
-        ) 
+            new Date(b.fechaCreacion ?? 0).getTime() -
+            new Date(a.fechaCreacion ?? 0).getTime()
+        )
 );
-
 
 function formatoFecha(fecha = ''){
 

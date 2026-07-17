@@ -9,6 +9,7 @@ let {
 
 
 
+/** @type {"ingreso" | "gasto"} */
 let tipo = $state("ingreso");
 let concepto = $state("");
 let monto = $state("");

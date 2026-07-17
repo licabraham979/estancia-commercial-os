@@ -102,7 +102,7 @@ class DashboardStore {
 
     const seguimientoHoy =
     seguimientos.filter(cliente =>
-        cliente.nivelSeguimiento?.texto === "Seguimiento hoy"
+        cliente.nivelSeguimiento?.etiqueta === "Seguimiento hoy"
     );
 
 
