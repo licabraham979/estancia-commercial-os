@@ -9,7 +9,7 @@
 
 	const plantilla = $derived(
 		$plantillas.find(
-			p => p.id == id
+			p => p.id === Number(id)
 		)
 	);
 

@@ -6,14 +6,13 @@ import { actividadesStore } from '$lib/stores/actividades.svelte.js';
 let { actividad } = $props();
 
 
-
-function categoria(){
-
-    return actividadesStore.categorias.find(
+const categoria = $derived(
+    actividadesStore.categorias.find(
         item => item.id === actividad.categoriaId
-    );
+    )
+);
 
-}
+
 
 function completar(){
 
@@ -24,7 +23,6 @@ function completar(){
 }
 
 </script>
-
 
 <div 
 class="card"
@@ -54,21 +52,24 @@ onclick={completar}
 
 <div class="meta">
 
+{#if categoria}
+
+<span class="categoria">
+
+{categoria.icono}
+
+{categoria.nombre}
+
+</span>
+
+{/if}
+
+
 <span>
 {actividad.prioridad}
 </span>
 
-<span>
-{categoria()?.nombre ?? 'Sin categoría'}
-</span>
-
-<span>
-{categoria()?.nombre}
-</span>
-
 </div>
-
-
 </div>
 
 
@@ -164,6 +165,14 @@ background:#f1f1f1;
 text-decoration:line-through;
 
 opacity:.5;
+
+}
+
+.categoria{
+
+border:1px solid;
+
+background:white;
 
 }
 

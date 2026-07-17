@@ -1,11 +1,64 @@
 <script>
 
 let {
-    actividades
+    actividades = []
 } = $props();
 
-</script>
 
+
+function iconoActividad(actividad){
+
+    if(actividad.titulo.includes('Estado')){
+        return '🔄';
+    }
+
+
+    if(actividad.titulo.includes('Llamada')){
+        return '📞';
+    }
+
+
+    if(actividad.titulo.includes('Cotización')){
+        return '📄';
+    }
+
+
+    if(actividad.titulo.includes('Pago')){
+        return '💰';
+    }
+
+
+    if(actividad.titulo.includes('Visita')){
+        return '📍';
+    }
+
+
+    return '👤';
+
+}
+
+
+
+function fechaBonita(fecha){
+
+    if(!fecha) return '';
+
+    return new Date(fecha)
+    .toLocaleString(
+        'es-HN',
+        {
+            day:'numeric',
+            month:'short',
+            hour:'2-digit',
+            minute:'2-digit'
+        }
+    );
+
+}
+
+
+
+</script>
 
 <div class="timeline">
 
@@ -24,16 +77,18 @@ Historial
 <div class="item">
 
 
-<div class="point"></div>
+<div class="point">
 
+{iconoActividad(actividad)}
+
+</div>
 
 <div class="content">
 
 
 <span>
-{actividad.fecha}
+{fechaBonita(actividad.fecha)}
 </span>
-
 
 <h3>
 {actividad.titulo}
@@ -96,20 +151,25 @@ padding-bottom:var(--space-5);
 
 .point {
 
-width:12px;
+width:34px;
 
-height:12px;
+height:34px;
 
 border-radius:50%;
 
 background:var(--primary);
 
-margin-top:6px;
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+font-size:16px;
 
 flex-shrink:0;
 
 }
-
 
 
 .content {

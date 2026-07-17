@@ -9,11 +9,21 @@ import ClienteCambiarEstado from './ClienteCambiarEstado.svelte';
 import ClienteProximaAccion from './ClienteProximaAccion.svelte';
 import ClienteContacto from './ClienteContacto.svelte';
 import ClienteInformacionEditar from './ClienteInformacionEditar.svelte';
+import { actividadesStore } from '$lib/stores/actividades.svelte.js';
+
+
 
 let {cliente = null} = $props();
 
 
+function crearSeguimiento(titulo= ''){ 
 
+    actividadesStore.crearActividadCliente(
+        titulo,
+        cliente.id
+    );
+
+}
 </script>
 {#if !cliente}
 
@@ -125,6 +135,35 @@ Próxima acción
 
 </div>
 
+<div class="acciones">
+
+<h3>
+⚡ Acciones rápidas
+</h3>
+
+
+<button onclick={() => crearSeguimiento('Llamar cliente')}>
+📞 Registrar llamada
+</button>
+
+
+<button onclick={() => crearSeguimiento('Enviar cotización')}>
+📄 Enviar cotización
+</button>
+
+
+<button onclick={() => crearSeguimiento('Programar seguimiento')}>
+📅 Seguimiento
+</button>
+
+
+<button onclick={() => crearSeguimiento('Registrar pago')}>
+💰 Pago recibido
+</button>
+
+
+</div>
+
 <ClienteInformacionEditar 
     cliente={cliente}
 />
@@ -142,6 +181,41 @@ Próxima acción
 
 
 <style>
+
+.acciones{
+
+margin-top:20px;
+
+background:var(--surface);
+
+border:1px solid var(--border);
+
+border-radius:var(--radius);
+
+padding:20px;
+
+display:flex;
+
+gap:12px;
+
+flex-wrap:wrap;
+
+}
+
+
+.acciones button{
+
+padding:10px 16px;
+
+border-radius:12px;
+
+border:1px solid #ddd;
+
+background:white;
+
+cursor:pointer;
+
+}
 
 .detalle {
 

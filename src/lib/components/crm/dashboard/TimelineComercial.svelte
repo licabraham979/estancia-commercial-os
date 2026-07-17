@@ -63,7 +63,11 @@ No hay seguimientos registrados.
 {cliente.nivelSeguimiento.etiqueta}
 
 </p>
+<p class="accion">
 
+🎯 {cliente.accionRecomendada}
+
+</p>
 <p>
 🏠 {cliente.proyecto}
 </p>
@@ -135,7 +139,15 @@ días sin contacto
 
 
 <style>
+.accion{
 
+margin-top:10px;
+
+font-weight:600;
+
+font-size:14px;
+
+}
 .timeline{
 
 background:white;

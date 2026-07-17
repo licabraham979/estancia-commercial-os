@@ -40,7 +40,9 @@ const estados = {
 };
 
 
-let actual = estados[estado] ?? estados["Nuevo contacto"];
+let actual = $derived(
+    estados[estado] ?? estados["Nuevo contacto"]
+);
 
 
 </script>

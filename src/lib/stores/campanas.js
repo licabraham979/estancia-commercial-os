@@ -1,3 +1,4 @@
+/** @typedef {import('$lib/types/clientes').Cliente} Cliente */
 import { writable } from 'svelte/store';
 
 

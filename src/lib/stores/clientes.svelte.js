@@ -1,82 +1,8 @@
-let clientes = $state([
+/** @typedef {import('$lib/types/clientes').Cliente} Cliente */
+/** @typedef {import('$lib/types/clientes').Gasto} Gasto */
+/** @typedef {import('$lib/types/clientes').Pago} Pago */
 
-{
-id:"oscar-guardado",
-
-nombre:"Oscar Guardado",
-
-empresa:"Cliente particular",
-
-telefono:"",
-
-correo:"",
-
-estado:"Inspección pendiente",
-
-proyecto:"Mantenimiento de techo",
-
-valor:"L 15000",
-
-siguienteAccion:"Enviar cotización",
-
-actividades:[
-
-{
-fecha:new Date().toISOString(),
-
-titulo:"Inspección registrada",
-
-descripcion:"Se realizó diagnóstico inicial del techo."
-
-}
-
-],
-
-archivos:[],
-
-notas:""
-
-},
-
-{
-id:"hotel-palma",
-
-nombre:"Hotel Palma",
-
-empresa:"Hotel Palma",
-
-telefono:"",
-
-correo:"",
-
-estado:"Cotización enviada",
-
-proyecto:"Mantenimiento preventivo",
-
-valor:"L 25000",
-
-siguienteAccion:"Dar seguimiento a cotización",
-
-actividades:[
-
-{
-fecha:new Date().toISOString(),
-
-titulo:"Cotización enviada",
-
-descripcion:"Se envió propuesta comercial."
-
-}
-
-],
-
-archivos:[],
-
-notas:""
-
-}
-
-]);
+let clientes = $state(/** @type {Cliente[]} */ ([]));
 
 export function obtenerClientes(){
 
@@ -86,139 +12,110 @@ export function obtenerClientes(){
 
 
 
+/**
+ * @param {number|string} id
+ */
 export function obtenerCliente(id){
 
     return clientes.find(
-        cliente => cliente.id === id
+        cliente => String(cliente.id) === String(id)
     );
 
 }
 
 
 
-export function cambiarEstado(id, nuevoEstado){
-
+/**
+ * @param {number|string} id
+ * @param {string} nuevoEstado
+ */
+    export function cambiarEstado(id, nuevoEstado) {
 
     const cliente = clientes.find(
-        cliente => cliente.id === id
+        c => String(c.id) === String(id)
     );
 
-
-    if(cliente){
-
+    if (cliente) {
 
         const estadoAnterior = cliente.estado;
 
-
         cliente.estado = nuevoEstado;
 
-
+        cliente.actividades ??= [];
 
         cliente.actividades.unshift({
-
-            fecha:new Date().toISOString(),
-
-            titulo:"Estado actualizado",
-
-            descripcion:
-            `${estadoAnterior} → ${nuevoEstado}`
-
+            id: Date.now(),
+            fecha: new Date().toISOString(),
+            titulo: "Estado actualizado",
+            descripcion: `${estadoAnterior} → ${nuevoEstado}`,
+            estado: "completada",
+            prioridad: "media",
+            fechaCreacion: new Date().toISOString()
         });
 
-
+        guardarClientes();
     }
-
-
 }
 
-
-
+/**
+ * @param {{
+nombre:string,
+empresa:string,
+telefono?:string,
+correo?:string
+}} datos
+ */
 export function crearCliente(datos){
 
 
 const nuevoCliente = {
 
-id:
-datos.nombre
-.toLowerCase()
-.replaceAll(" ","-"),
+    id: Date.now(),
 
+    nombre: datos.nombre,
 
-nombre:
-datos.nombre,
+    empresa: datos.empresa,
 
+    estado:"Nuevo contacto",
 
-empresa:
-datos.empresa,
+    telefono:datos.telefono ?? "",
 
+    correo:datos.correo ?? "",
 
-telefono:
-datos.telefono,
+    actividades:[],
 
+    pagos:[],
 
-correo:
-datos.correo,
+    gastos:[],
 
+    ultimaActividad:null,
 
-estado:
-"Nuevo contacto",
+    proyecto:"",
+    valor:0,
 
-
-proyecto:
-"",
-
-
-valor:
-"L 0",
-
-
-siguienteAccion:
-"Contactar cliente",
-
-
-actividades:[
-
-{
-
-fecha:new Date().toISOString(),
-
-titulo:"Cliente creado",
-
-descripcion:"Nuevo registro comercial"
-
-}
-
-],
-
-
-archivos:[],
-
-
-notas:""
+    nivelSeguimiento:{
+        etiqueta:"Cliente nuevo",
+        color:"gray",
+        icono:"👤"
+    }
 
 };
-
 
 
 clientes.push(nuevoCliente);
 
 guardarClientes();
 
-
-
 }
 
-function guardarClientes(){
+function guardarClientes() {
 
-    if(typeof localStorage === "undefined"){
-        return;
-    }
+    if (typeof localStorage === "undefined") return;
 
     localStorage.setItem(
         "clientes",
         JSON.stringify(clientes)
     );
-
 }
 
 
@@ -232,16 +129,9 @@ function cargarClientes(){
     const datos = localStorage.getItem("clientes");
 
 
-    if(datos){
-
-        const clientesGuardados = JSON.parse(datos);
-
-
-        clientes.push(
-            ...clientesGuardados
-        );
-
-    }
+    if (datos) {
+    clientes = JSON.parse(datos);
+}
 
 }
 
@@ -258,35 +148,21 @@ export function obtenerClientesSinAccion(){
 
 }
 
+/**
+ * @param {number|string} id
+ * @param {Partial<Cliente>} datos
+ */
 export function actualizarCliente(id, datos){
 
     const cliente = clientes.find(
-        cliente => cliente.id === id
+        c => c.id === id
     );
 
+    if(!cliente) return;
 
-    if(cliente){
+    Object.assign(cliente, datos);
 
-        cliente.proyecto = datos.proyecto;
-        cliente.valor = datos.valor;
-        cliente.siguienteAccion = datos.siguienteAccion;
-
-
-        cliente.actividades.unshift({
-
-            fecha:new Date().toISOString(),
-
-            titulo:"Información actualizada",
-
-            descripcion:"Se actualizaron datos comerciales del cliente."
-
-        });
-
-
-        guardarClientes();
-
-    }
-    
+    guardarClientes();
 
 }
 
@@ -337,6 +213,12 @@ export function obtenerSeguimientos(){
             nivelSeguimiento:
             calcularNivelSeguimiento(
                 ultima?.fecha
+            ),
+
+            accionRecomendada:
+            calcularAccionSeguimiento(
+                ultima?.fecha,
+                cliente.estado
             )
 
 
@@ -355,7 +237,7 @@ export function obtenerSeguimientos(){
         b.ultimaActividad?.fecha ?? 0;
 
 
-        return new Date(fechaB) - new Date(fechaA);
+        return new Date(fechaB).getTime() - new Date(fechaA).getTime();
 
 
     });
@@ -364,7 +246,146 @@ export function obtenerSeguimientos(){
 
 
 }
+/**
+ * @param {number|string} id
+ * @param {Gasto} gasto
+ */
 
+export function registrarGasto(id, gasto){
+
+    const cliente =
+    clientes.find(
+        cliente => cliente.id === id
+    );
+
+
+    if(cliente){
+
+       cliente.gastos.push({
+
+        id: Date.now(),
+
+        tipo:"gasto",
+
+        fecha:new Date().toISOString(),
+
+        concepto:gasto.concepto,
+
+        monto:Number(gasto.monto)
+
+        });
+
+
+        guardarClientes();
+
+    }
+
+}
+
+/**
+ 
+ * @property {string} fecha
+ * @property {string} concepto
+ * @property {number} valor
+ * @property {number} valorProyecto
+ */
+
+/**
+ * @param {number|string} id
+ * @param {Pago} pago
+ */
+export function registrarPago(id, pago){
+
+    const cliente = clientes.find(
+        cliente => cliente.id === id
+    );
+
+    if(cliente){
+
+        cliente.pagos.push({
+
+            id: Date.now(),
+
+            tipo:"ingreso",
+
+            fecha:new Date().toISOString(),
+
+            concepto:pago.concepto,
+
+            monto:Number(pago.monto)
+
+        });
+
+        guardarClientes();
+
+    }
+
+}
+    
+/**
+ * @param {number|string} id
+ */
+export function obtenerRentabilidad(id){
+
+    const cliente =
+    clientes.find(
+        cliente => cliente.id === id
+    );
+
+
+    if(!cliente){
+
+        return null;
+
+    }
+
+
+
+    const ingresos =
+    cliente.pagos.reduce(
+    /**
+     * @param {number} total
+     * @param {import('$lib/types/clientes').Pago} pago
+     */
+    (total,pago)=>
+        total + pago.monto,
+    0
+    );
+
+
+    const gastos =
+cliente.gastos.reduce(
+    /**
+     * @param {number} total
+     * @param {import('$lib/types/clientes').Gasto} gasto
+     */
+    (total,gasto)=>
+    total + gasto.monto,
+    0
+);
+
+
+    return {
+
+    ingresos,
+
+    gastos,
+
+    ganancia:
+
+    ingresos - gastos,
+
+    pendiente:
+
+    cliente.valor - ingresos
+
+};
+
+
+}
+/**
+ * @param {string|Date|null|undefined} fecha
+ */
 function calcularTiempoSinContacto(fecha){
 
     if(!fecha){
@@ -374,9 +395,8 @@ function calcularTiempoSinContacto(fecha){
     }
 
 
-    const ahora = new Date();
-
-    const ultima = new Date(fecha);
+    const ahora = Date.now();
+    const ultima = new Date(fecha).getTime();
 
 
     const diferencia =
@@ -410,7 +430,9 @@ function calcularTiempoSinContacto(fecha){
     return `Hace ${dias} días`;
 
 }
-
+/**
+ * @param {string|Date|null|undefined} fecha
+ */
 function calcularNivelSeguimiento(fecha){
 
     if(!fecha){
@@ -479,6 +501,68 @@ function calcularNivelSeguimiento(fecha){
 
     };
 
+
+}
+/**
+ * @param {string|Date|null|undefined} fecha
+ */
+function calcularAccionSeguimiento(fecha, estado){
+
+
+    const horas =
+    fecha
+    ?
+    Date.now() - new Date(fecha).getTime()
+    /
+    (1000 * 60 * 60)
+    :
+    999;
+
+
+
+    if(!fecha){
+
+        return "Registrar primer contacto";
+
+    }
+
+
+
+    if(horas < 1){
+
+        return "Continuar negociación";
+
+    }
+
+
+
+    if(horas < 24){
+
+        return "Enviar seguimiento";
+
+    }
+
+
+
+    if(horas < 72){
+
+        return "Realizar llamada";
+
+    }
+
+
+
+    if(
+        estado === "Cotización enviada"
+    ){
+
+        return "Confirmar decisión del cliente";
+
+    }
+
+
+
+   return "Reactivar cliente";
 
 }
 

@@ -22,7 +22,7 @@
 		)
 	);
 
-	function copiarMensaje(texto){
+	function copiarMensaje(texto = ''){
 
 		navigator.clipboard.writeText(texto);
 
@@ -30,7 +30,7 @@
 
 	}
 
-	function editarPlantilla(id){
+	function editarPlantilla(id = 0){
 
 	console.log('plantilla', id);
 

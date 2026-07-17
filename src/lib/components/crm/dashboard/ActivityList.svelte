@@ -1,29 +1,28 @@
 <script>
 
-const activities = [
+import { actividadesStore } from '$lib/stores/actividades.svelte.js';
 
-    {
-        title: "Cotización enviada",
-        client: "Hotel Palma",
-        time: "Hace 2 horas"
-    },
 
-    {
-        title: "Proyecto iniciado",
-        client: "Restaurante Azul",
-        time: "Ayer"
-    },
+const activities = $derived(
+    actividadesStore.actividades.slice(0,5)
+);
 
-    {
-        title: "Seguimiento pendiente",
-        client: "Oscar Guardado",
-        time: "Hace 3 días"
-    }
 
-];
+function formatoFecha(fecha = ''){
+
+    if(!fecha) return '';
+
+    return new Date(fecha).toLocaleDateString(
+        'es-HN',
+        {
+            day:'2-digit',
+            month:'short'
+        }
+    );
+
+}
 
 </script>
-
 
 <div class="activity">
 

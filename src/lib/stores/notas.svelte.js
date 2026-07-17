@@ -1,5 +1,9 @@
-let notas = $state([]);
+/** @typedef {import('$lib/types/clientes').Nota} Nota */
 
+let notas = $state(
+    /** @type {Nota[]} */
+    ([])
+);
 
 function guardarNotas(){
 

@@ -1,41 +1,44 @@
 <script>
 
-const stages = [
+import { obtenerClientes } from '$lib/stores/clientes.svelte.js';
+
+
+const estados = [
     {
         title: "Prospectos",
-        clients: [
-            "Hotel Palma",
-            "Restaurante Azul",
-            "Taller ABC"
-        ]
+        estado: "Nuevo contacto"
     },
-
     {
         title: "Inspección",
-        clients: [
-            "Oscar Guardado"
-        ]
+        estado: "Inspección pendiente"
     },
-
     {
         title: "Cotización",
-        clients: [
-            "Farmacia Centro",
-            "Bodega XYZ"
-        ]
+        estado: "Cotización enviada"
     },
-
     {
         title: "Seguimiento",
-        clients: [
-            "Constructora Norte"
-        ]
+        estado: "Proyecto aprobado"
     }
 ];
 
+
+let stages = $derived(
+    estados.map(etapa => ({
+        title: etapa.title,
+
+        clients: obtenerClientes()
+            .filter(
+                cliente => cliente.estado === etapa.estado
+            )
+            .map(
+                cliente => cliente.nombre
+            )
+    }))
+);
+
+
 </script>
-
-
 <div class="pipeline">
 
 {#each stages as stage}

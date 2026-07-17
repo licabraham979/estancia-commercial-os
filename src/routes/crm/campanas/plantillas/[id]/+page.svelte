@@ -5,7 +5,7 @@
 
 	let plantilla = $derived(
 		$plantillas.find(
-			p => p.id == params.id
+			p => p.id === Number(params.id)
 		)
 	);
 

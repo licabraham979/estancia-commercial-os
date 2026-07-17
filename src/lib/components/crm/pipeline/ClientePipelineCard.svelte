@@ -28,7 +28,7 @@ draggable="true"
 
 ondragstart={(e)=>{
 
-e.dataTransfer.setData(
+e.dataTransfer?.setData(
 "clienteId",
 cliente.id
 );

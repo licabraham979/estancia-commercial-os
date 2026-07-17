@@ -23,7 +23,7 @@ titulo="Nuevo contacto"
 
 clientes={
 clientes.filter(
-c => c.estado==="Nuevo contacto"
+(c) => c.estado==="Nuevo contacto"
 )
 }
 
@@ -37,7 +37,7 @@ titulo="Inspección pendiente"
 
 clientes={
 clientes.filter(
-c => c.estado==="Inspección pendiente"
+(c) => c.estado==="Inspección pendiente"
 )
 }
 
@@ -51,7 +51,7 @@ titulo="Cotización enviada"
 
 clientes={
 clientes.filter(
-c => c.estado==="Cotización enviada"
+(c) => c.estado==="Cotización enviada"
 )
 }
 
@@ -65,7 +65,7 @@ titulo="Proyecto aprobado"
 
 clientes={
 clientes.filter(
-c => c.estado==="Proyecto aprobado"
+(c) => c.estado==="Proyecto aprobado"
 )
 }
 

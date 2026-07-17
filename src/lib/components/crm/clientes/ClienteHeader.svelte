@@ -20,11 +20,11 @@ onclick={() => goto('/crm/clientes')}
 <div class="header">
 
 
-<ClienteHeader
+<!-- <ClienteHeader
     nombre={cliente.nombre}
     empresa={cliente.empresa}
     estado={cliente.estado}
-/>
+/> -->
 
 
 <div class="badge">

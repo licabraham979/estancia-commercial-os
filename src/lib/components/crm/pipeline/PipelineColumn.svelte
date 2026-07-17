@@ -14,22 +14,38 @@ clientes
 
 
 
+// function soltar(event){
+
+
+// const clienteId =
+// event.dataTransfer.getData(
+// "clienteId"
+// );
+
+
+
+// cambiarEstado(
+// clienteId,
+// titulo
+// );
+
+
+
+// }
 function soltar(event){
 
+    event.preventDefault();
 
-const clienteId =
-event.dataTransfer.getData(
-"clienteId"
-);
+    const clienteId =
+        event.dataTransfer.getData("clienteId");
 
+    console.log("DROP CLIENTE:", clienteId);
+    console.log("NUEVO ESTADO:", titulo);
 
-
-cambiarEstado(
-clienteId,
-titulo
-);
-
-
+    cambiarEstado(
+        clienteId,
+        titulo
+    );
 
 }
 </script>

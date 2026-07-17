@@ -19,6 +19,10 @@
 			ruta: '/crm/campanas'
 		},
 		{
+			nombre: 'Actividades',
+			ruta: '/crm/actividades'
+		},
+		{
 			nombre: 'Nuevo Cliente',
 			ruta: '/crm/clientes/nuevo'
 		}
