@@ -1,32 +1,34 @@
 <script>
     import StatCard from './StatCard.svelte';
+    import { dashboardStore } from '$lib/stores/dashboard.svelte.js';
 
+    const stats = $derived([
 
-    const stats = [
-        {
-            title: "Prospectos",
-            value: 8,
-            description: "Nuevos clientes potenciales"
-        },
+    {
+        title: "Pendientes",
+        value: dashboardStore.resumen.pendientes,
+        description: "Actividades por realizar"
+    },
 
-        {
-            title: "Cotizaciones",
-            value: 4,
-            description: "Pendientes de respuesta"
-        },
+    {
+        title: "Completadas",
+        value: dashboardStore.resumen.completadas,
+        description: "Actividades terminadas"
+    },
 
-        {
-            title: "Proyectos",
-            value: 2,
-            description: "En ejecución"
-        },
+    {
+        title: "Progreso",
+        value: `${dashboardStore.resumen.progreso}%`,
+        description: "Avance del día"
+    },
 
-        {
-            title: "Cobros",
-            value: 1,
-            description: "Pendientes"
-        }
-    ];
+    {
+        title: "Críticas",
+        value: dashboardStore.resumen.prioridadAlta,
+        description: "Prioridad alta"
+    }
+
+]);
 
 </script>
 

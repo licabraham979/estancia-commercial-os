@@ -57,7 +57,7 @@ export function crearNota(datos){
 
         clienteId:datos.clienteId,
 
-        fecha:"Ahora",
+        fecha:new Date().toISOString(),
 
         texto:datos.texto
 

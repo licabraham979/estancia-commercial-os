@@ -39,7 +39,7 @@ export function cambiarEstado(id, nuevoEstado){
 
         cliente.actividades.unshift({
 
-            fecha:"Ahora",
+            fecha:new Date().toISOString(),
 
             titulo:"Estado actualizado",
 
@@ -53,6 +53,8 @@ export function cambiarEstado(id, nuevoEstado){
 
 
 }
+
+
 
 export function crearCliente(datos){
 
@@ -101,7 +103,7 @@ actividades:[
 
 {
 
-fecha:"Ahora",
+fecha:new Date().toISOString(),
 
 titulo:"Cliente creado",
 
@@ -171,6 +173,13 @@ if (typeof window !== "undefined") {
     cargarClientes();
 }
 
+export function obtenerClientesSinAccion(){
+
+    return clientes.filter(
+        cliente => !cliente.siguienteAccion
+    );
+
+}
 
 export function actualizarCliente(id, datos){
 
@@ -188,7 +197,7 @@ export function actualizarCliente(id, datos){
 
         cliente.actividades.unshift({
 
-            fecha:"Ahora",
+            fecha:new Date().toISOString(),
 
             titulo:"Información actualizada",
 
@@ -200,5 +209,67 @@ export function actualizarCliente(id, datos){
         guardarClientes();
 
     }
+    
+
+}
+
+export function obtenerSeguimientos(){
+
+    return clientes.map(cliente => ({
+
+        id: cliente.id,
+
+        nombre: cliente.nombre,
+
+        empresa: cliente.empresa,
+
+        estado: cliente.estado,
+
+        siguienteAccion: cliente.siguienteAccion,
+
+        ultimaActividad:
+            cliente.actividades?.[0] ?? null
+
+    }));
+
+}
+
+export function obtenerTimeline(){
+
+    return clientes
+    .map(cliente => {
+
+        const ultima =
+        cliente.actividades?.[0] ?? null;
+
+
+        return {
+
+            id: cliente.id,
+
+            nombre: cliente.nombre,
+
+            empresa: cliente.empresa,
+
+            estado: cliente.estado,
+
+            siguienteAccion:
+            cliente.siguienteAccion,
+
+
+            ultimaActividad: ultima,
+
+
+            fecha:
+            ultima?.fecha ?? null
+
+        };
+
+    })
+    .sort((a,b)=>{
+
+        return new Date(b.fecha) - new Date(a.fecha);
+
+    });
 
 }
