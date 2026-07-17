@@ -52,20 +52,55 @@ No hay seguimientos registrados.
 {cliente.nombre}
 </h4>
 
-
 <p class="estado">
+📍 {cliente.estado}
+</p>
 
-{cliente.estado}
+<p class={`nivel ${cliente.nivelSeguimiento.color}`}>
+
+{cliente.nivelSeguimiento.icono}
+
+{cliente.nivelSeguimiento.etiqueta}
 
 </p>
+
+<p>
+🏠 {cliente.proyecto}
+</p>
+
+
 
 
 <p>
+➡ Próxima acción:
+{cliente.siguienteAccion}
+</p>
 
-➡ {cliente.siguienteAccion}
+<p>
+⏱ {cliente.tiempoSinContacto}
+</p>
+
+
+{#if cliente.valor}
+
+<p>
+💰 {cliente.valor}
+</p>
+
+
+{/if}
+
+{#if cliente.diasSinContacto > 0}
+
+<p class="dias">
+
+⏳ {cliente.diasSinContacto}
+días sin contacto
 
 </p>
 
+
+{/if}
 
 {#if cliente.ultimaActividad}
 
@@ -186,6 +221,58 @@ padding:20px;
 background:#f8fafc;
 
 border-radius:12px;
+
+}
+
+.nivel{
+
+display:inline-block;
+
+padding:5px 10px;
+
+border-radius:20px;
+
+font-size:13px;
+
+font-weight:600;
+
+margin:8px 0;
+
+}
+
+
+.verde{
+
+background:#dcfce7;
+
+color:#166534;
+
+}
+
+
+.amarillo{
+
+background:#fef9c3;
+
+color:#854d0e;
+
+}
+
+
+.rojo{
+
+background:#fee2e2;
+
+color:#991b1b;
+
+}
+
+
+.gris{
+
+background:#e5e7eb;
+
+color:#374151;
 
 }
 

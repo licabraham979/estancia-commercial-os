@@ -4,33 +4,40 @@ import StatCard from './StatCard.svelte';
 import { dashboardStore } from '$lib/stores/dashboard.svelte.js';
 
 
-const stats = $derived([
+const stats = $derived.by(() => {
 
-    {
-        title:"Clientes",
-        value:dashboardStore.clientesResumen.sinAccion,
-        description:"Clientes registrados"
-    },
+    const resumen = dashboardStore.clientesResumen;
 
-    {
-        title:"Nuevos",
-        value:dashboardStore.clientesResumen.sinAccion,
-        description:"Nuevos contactos"
-    },
 
-    {
-        title:"Proyectos",
-        value:dashboardStore.clientesResumen.sinAccion,
-        description:"Clientes con proyecto"
-    },
+    return [
 
-    {
-        title:"Sin acción",
-        value:dashboardStore.clientesResumen.sinAccion,
-        description:"Clientes sin seguimiento"
-    }
+        {
+            title:"Clientes",
+            value:resumen.total,
+            description:"Clientes registrados"
+        },
 
-]);
+        {
+            title:"Nuevos",
+            value:resumen.nuevos,
+            description:"Nuevos contactos"
+        },
+
+        {
+            title:"Proyectos",
+            value:resumen.conProyecto,
+            description:"Clientes con proyecto"
+        },
+
+        {
+            title:"Sin acción",
+            value:resumen.sinAccion,
+            description:"Clientes sin seguimiento"
+        }
+
+    ];
+
+});
 
 </script>
 

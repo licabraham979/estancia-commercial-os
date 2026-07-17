@@ -1,5 +1,82 @@
-let clientes = $state([]);
+let clientes = $state([
 
+{
+id:"oscar-guardado",
+
+nombre:"Oscar Guardado",
+
+empresa:"Cliente particular",
+
+telefono:"",
+
+correo:"",
+
+estado:"Inspección pendiente",
+
+proyecto:"Mantenimiento de techo",
+
+valor:"L 15000",
+
+siguienteAccion:"Enviar cotización",
+
+actividades:[
+
+{
+fecha:new Date().toISOString(),
+
+titulo:"Inspección registrada",
+
+descripcion:"Se realizó diagnóstico inicial del techo."
+
+}
+
+],
+
+archivos:[],
+
+notas:""
+
+},
+
+{
+id:"hotel-palma",
+
+nombre:"Hotel Palma",
+
+empresa:"Hotel Palma",
+
+telefono:"",
+
+correo:"",
+
+estado:"Cotización enviada",
+
+proyecto:"Mantenimiento preventivo",
+
+valor:"L 25000",
+
+siguienteAccion:"Dar seguimiento a cotización",
+
+actividades:[
+
+{
+fecha:new Date().toISOString(),
+
+titulo:"Cotización enviada",
+
+descripcion:"Se envió propuesta comercial."
+
+}
+
+],
+
+archivos:[],
+
+notas:""
+
+}
+
+]);
 
 export function obtenerClientes(){
 
@@ -215,32 +292,13 @@ export function actualizarCliente(id, datos){
 
 export function obtenerSeguimientos(){
 
-    return clientes.map(cliente => ({
-
-        id: cliente.id,
-
-        nombre: cliente.nombre,
-
-        empresa: cliente.empresa,
-
-        estado: cliente.estado,
-
-        siguienteAccion: cliente.siguienteAccion,
-
-        ultimaActividad:
-            cliente.actividades?.[0] ?? null
-
-    }));
-
-}
-
-export function obtenerTimeline(){
-
     return clientes
     .map(cliente => {
 
+
         const ultima =
         cliente.actividades?.[0] ?? null;
+
 
 
         return {
@@ -251,25 +309,176 @@ export function obtenerTimeline(){
 
             empresa: cliente.empresa,
 
+
             estado: cliente.estado,
+
 
             siguienteAccion:
             cliente.siguienteAccion,
 
 
+            valor:
+            cliente.valor,
+
+
+            proyecto:
+            cliente.proyecto,
+
+
             ultimaActividad: ultima,
 
 
-            fecha:
-            ultima?.fecha ?? null
+            tiempoSinContacto:
+            calcularTiempoSinContacto(
+                ultima?.fecha
+            ),
+
+
+            nivelSeguimiento:
+            calcularNivelSeguimiento(
+                ultima?.fecha
+            )
+
 
         };
+
 
     })
     .sort((a,b)=>{
 
-        return new Date(b.fecha) - new Date(a.fecha);
+
+        const fechaA =
+        a.ultimaActividad?.fecha ?? 0;
+
+
+        const fechaB =
+        b.ultimaActividad?.fecha ?? 0;
+
+
+        return new Date(fechaB) - new Date(fechaA);
+
 
     });
 
+    
+
+
 }
+
+function calcularTiempoSinContacto(fecha){
+
+    if(!fecha){
+
+        return "Sin contacto";
+
+    }
+
+
+    const ahora = new Date();
+
+    const ultima = new Date(fecha);
+
+
+    const diferencia =
+    ahora - ultima;
+
+
+    const horas =
+    Math.floor(
+        diferencia / (1000 * 60 * 60)
+    );
+
+
+    if(horas < 1){
+
+        return "Hace menos de 1 hora";
+
+    }
+
+
+    if(horas < 24){
+
+        return `Hace ${horas} horas`;
+
+    }
+
+
+    const dias =
+    Math.floor(horas / 24);
+
+
+    return `Hace ${dias} días`;
+
+}
+
+function calcularNivelSeguimiento(fecha){
+
+    if(!fecha){
+
+        return {
+
+            etiqueta:"Sin contacto",
+
+            color:"gris",
+
+            icono:"⚫"
+
+        };
+
+    }
+
+
+    const ahora = new Date();
+
+    const ultima = new Date(fecha);
+
+
+    const horas =
+    (ahora - ultima) /
+    (1000 * 60 * 60);
+
+
+
+    if(horas < 24){
+
+        return {
+
+            etiqueta:"Activo",
+
+            color:"verde",
+
+            icono:"🟢"
+
+        };
+
+    }
+
+
+    if(horas < 72){
+
+        return {
+
+            etiqueta:"Atención",
+
+            color:"amarillo",
+
+            icono:"🟡"
+
+        };
+
+    }
+
+
+    return {
+
+        etiqueta:"Riesgo",
+
+        color:"rojo",
+
+        icono:"🔴"
+
+    };
+
+
+}
+
