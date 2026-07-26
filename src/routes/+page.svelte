@@ -1,4 +1,6 @@
 <script lang="ts">
+import { track } from '@vercel/analytics';
+
   import Navbar from '$lib/components/Navbar.svelte';
   import Hero from '$lib/components/Hero.svelte';
   import ServiceCard from '$lib/components/ServiceCard.svelte';
@@ -303,6 +305,17 @@ async function guardarLead(datos: Record<string,string>){
 
 	const resultado = await crearLead(lead);
 
+  if(resultado.ok){
+
+		track('lead_enviado', {
+
+			servicio: servicioSeleccionado,
+
+			ciudad: lead.ciudad
+
+		});
+
+	}
 
 	console.log(resultado);
 
@@ -603,6 +616,7 @@ else {
 
 <div class="mt-8 p-6 rounded-3xl bg-emerald-50 border">
 
+ 
 <h3 class="text-xl font-bold">
 	Estimación inicial
 </h3>
