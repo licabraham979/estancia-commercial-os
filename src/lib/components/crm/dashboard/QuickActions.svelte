@@ -1,33 +1,71 @@
 <script>
 
+import NuevoClienteModal from '$lib/components/crm/clientes/NuevoClienteModal.svelte';
+
+
+let mostrarNuevoCliente = $state(false);
+
+
 const actions = [
-
     {
-        title:"Nuevo cliente",
-        description:"Registrar prospecto"
+        id: "nuevo-cliente",
+        title: "Nuevo cliente",
+        description: "Registrar prospecto"
     },
 
     {
-        title:"Nueva cotización",
-        description:"Crear propuesta comercial"
+        id: "nueva-cotizacion",
+        title: "Nueva cotización",
+        description: "Crear propuesta comercial"
     },
 
     {
-        title:"Nueva visita",
-        description:"Agendar inspección"
+        id: "nueva-visita",
+        title: "Nueva visita",
+        description: "Agendar inspección"
     },
 
     {
-        title:"Registrar pago",
-        description:"Actualizar cobros"
+        id: "registrar-pago",
+        title: "Registrar pago",
+        description: "Actualizar cobros"
     }
-
 ];
 
+
+
+/**
+ * Ejecuta acciones rápidas del dashboard CRM
+ * @param {string} id
+ */
+function ejecutarAccion(id) {
+
+    switch(id) {
+
+        case "nuevo-cliente":
+
+            mostrarNuevoCliente = true;
+
+            break;
+
+
+        case "nueva-cotizacion":
+
+            console.log("Nueva cotización");
+
+            break;
+
+
+        case "nueva-visita":
+
+            console.log("Nueva visita");
+
+            break;
+
+    }
+}
+
 </script>
-
-
-
 <div class="actions">
 
 <h2>
@@ -39,7 +77,10 @@ Acciones rápidas
 
 {#each actions as action}
 
-<button class="action">
+<button
+    class="action"
+    on:click={() => ejecutarAccion(action.id)}
+>
 
 <div class="title">
 {action.title}
@@ -58,6 +99,10 @@ Acciones rápidas
 
 </div>
 
+
+<NuevoClienteModal
+    bind:open={mostrarNuevoCliente}
+/>
 
 
 <style>

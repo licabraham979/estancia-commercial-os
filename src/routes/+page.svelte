@@ -9,40 +9,84 @@
   import Titulo from '$lib/components/Titulo.svelte';
   import LeftPanel from '$lib/components/LeftPanel.svelte';
   import QuoteForm from '$lib/components/QuoteForm.svelte';
+  import LeadCapture from '$lib/components/LeadCapture.svelte';
   import AccionFin from '$lib/components/AccionFin.svelte';
+  import { serviciosStore } from '$lib/stores/catalogo/servicios.svelte.js';
+  import { crearCliente } from '$lib/stores/clientes.svelte.js';
+  import ImageModal from '$lib/components/crm/ui/ImageModal.svelte';
+  
+  let servicioSeleccionado = $state('');
+let areaSeleccionada = $state(0);
+
+const precios: Record<string, number> = {
+
+	"Mantenimiento de techo":120,
+
+	"Pintura de fachada":90,
+
+	"Rótulo comercial":4500,
+
+	"Vinil microperforado":350
+
+};
+
+let estimacion = $derived(
+
+	servicioSeleccionado && areaSeleccionada
+
+		? {
+
+			desde: Math.round(
+				precios[servicioSeleccionado] * areaSeleccionada * 0.85
+			),
+
+			hasta: Math.round(
+				precios[servicioSeleccionado] * areaSeleccionada * 1.15
+			)
+
+		}
+
+		: null
+
+);
 
   const procesoSteps = [
-    { 
-      id: 1, 
-      title: "VISITA", 
-      description: "Conocemos tu proyecto y tomamos medidas.", 
-      color: "bg-emerald-500" 
-    },
-    { 
-      id: 2, 
-      title: "DIAGNÓSTICO", 
-      description: "Analizamos y detectamos las mejores soluciones.", 
-      color: "bg-blue-500" 
-    },
-    { 
-      id: 3, 
-      title: "PROPUESTA", 
-      description: "Te presentamos la mejor opción para tu negocio.", 
-      color: "bg-amber-500" 
-    },
-    { 
-      id: 4, 
-      title: "INSTALACIÓN", 
-      description: "Ejecutamos el proyecto con calidad y profesionalismo.", 
-      color: "bg-purple-500" 
-    },
-    { 
-      id: 5, 
-      title: "GARANTÍA", 
-      description: "Respaldamos nuestro trabajo y seguimos contigo.", 
-      color: "bg-green-500" 
-    }
-  ];
+  { 
+    id: 1, 
+    title: "VISITA", 
+    description: "Conocemos tu proyecto y tomamos medidas.", 
+    color: "bg-emerald-500",
+    titleColor: "text-emerald-600"
+  },
+  { 
+    id: 2, 
+    title: "DIAGNÓSTICO", 
+    description: "Analizamos y detectamos las mejores soluciones.", 
+    color: "bg-blue-500",
+    titleColor: "text-blue-600"
+  },
+  { 
+    id: 3, 
+    title: "PROPUESTA", 
+    description: "Te presentamos la mejor opción para tu negocio.", 
+    color: "bg-amber-500",
+    titleColor: "text-amber-600"
+  },
+  { 
+    id: 4, 
+    title: "INSTALACIÓN", 
+    description: "Ejecutamos el proyecto con calidad y profesionalismo.", 
+    color: "bg-purple-500",
+    titleColor: "text-purple-600"
+  },
+  { 
+    id: 5, 
+    title: "GARANTÍA", 
+    description: "Respaldamos nuestro trabajo y seguimos contigo.", 
+    color: "bg-green-500",
+    titleColor: "text-green-600"
+  }
+];
 
   const misImágenes = [
     "https://res.cloudinary.com/licabraham939/image/upload/v1782770933/aestanciacomercial/cashless-payment_jwbhtj.png",
@@ -109,170 +153,197 @@
     const sectionTitle = "¿ QUÉ PROBLEMAS "; 
   const sectionSubtitle = "QUIERES RESOLVER ?";
   
-  interface Service {
-    icon: string;
-    title: string;
-    subtitle: string;
-    colorClass: string;
-  }
-
-  const services: Service[] = [
-    {
-      icon: "https://res.cloudinary.com/licabraham939/image/upload/v1782769333/aestanciacomercial/gable_eoqld0.png",
-      title: "TECHOS INDUSTRIALES",
-      subtitle: "Conservación y protección",
-      colorClass: "border-[#E7A145]"
-    },
-    {
-      icon: "https://res.cloudinary.com/licabraham939/image/upload/v1782770462/aestanciacomercial/door_nrmyhn.png",
-      title: "FACHADAS LED",
-      subtitle: "Iluminación que atrae clientes",
-      colorClass: "border-[#60A378]"
-    },
-    {
-      icon: "https://res.cloudinary.com/licabraham939/image/upload/v1782770369/aestanciacomercial/apartment_kduscl.png",
-      title: "REMODELACIÓN COMERCIAL",
-      subtitle: "Espacios que venden más",
-      colorClass: "border-[#E7A145]"
-    },
-    {
-      icon: "https://res.cloudinary.com/licabraham939/image/upload/v1782770794/aestanciacomercial/billboard_oln1vn.png",
-      title: "VINILES Y ACRILICOS",
-      subtitle: "Diseño e instalación profesional",
-      colorClass: "border-[#60A378]"
-    },
-    {
-      icon: "https://res.cloudinary.com/licabraham939/image/upload/v1782770933/aestanciacomercial/cashless-payment_jwbhtj.png",
-      title: "TARJETAS DIGITALES",
-      subtitle: "Comparte tu negocio al instante",
-      colorClass: "border-[#E7A145]"
-    },
-    {
-      icon: "https://res.cloudinary.com/licabraham939/image/upload/v1782771062/aestanciacomercial/crm_owcxve.png",
-      title: "PÁGINA WEB + CRM",
-      subtitle: "Presencia digital que convierte",
-      colorClass: "border-[#60A378]"
-    }
-  ];
-
+ 
+  
   const serviciosSecundarios = [
     {
       title: "Salón de Estética ELORA", // Tus NUEVOS títulos
-      subtitle: "Se desarrolla letras en acrílico 6mm con acabado Rose Gold y se agrega led.",
+      subtitle: "Renovamos la imagen del negocio mediante letras en acrílico de 6 mm con acabado Rose Gold e iluminación LED, logrando una fachada moderna y de mayor presencia comercial.",
       icon: "https://res.cloudinary.com/licabraham939/image/upload/v1782796543/aestanciacomercial/proyectosfinales/WhatsApp_Image_2026-06-29_at_10.05.52_PM_6_clhp3q.jpg", // Tus NUEVAS imágenes
       colorClass: "border-purple-600"
     },
     {
       title: "Ferretería MACTOOLS",
-      subtitle: "Impresión de lona HD, con pintura UV para exterior y una instalación en el 3 piso con un sistema de ventas sobre todas las marcas",
+      subtitle: "Fabricamos una lona en impresión HD con tintas UV para exterior e instalamos el rótulo en un tercer nivel, logrando máxima visibilidad y resistencia a la intemperie.",
       icon: "https://res.cloudinary.com/licabraham939/image/upload/v1782796448/aestanciacomercial/proyectosfinales/WhatsApp_Image_2026-06-29_at_9.51.37_PM_iiabof.jpg",
       colorClass: "border-purple-600"
     },
     {
       title: "Rotulación con Pintura",
-      subtitle: "Visualización de la marca con pintura de calidad y alta resistencia para una nave industrial de cristal",
+      subtitle: "Renovamos la imagen corporativa mediante pintura de alta resistencia, resaltando la identidad de la marca en una moderna fachada de vidrio.",
       icon: "https://res.cloudinary.com/licabraham939/image/upload/v1782808782/aestanciacomercial/proyectosfinales/IMG_20260429_141057_jfixwo.jpg",
       colorClass: "border-purple-600"
     },
     {
       title: "Rotulación Vinil Microperforado",
-      subtitle: "Cliente interesado en aperturar para el 10 de Mayo su negocio de Salón y se rotula con vinil microperforado y muebles de calidad",
+      subtitle: "Acompañamos la apertura del salón con rotulación en vinil microperforado y mobiliario comercial, entregando un espacio listo para recibir clientes desde el primer día.",
       icon: "https://res.cloudinary.com/licabraham939/image/upload/v1782809287/aestanciacomercial/proyectosfinales/ChatGPT_Image_30_jun_2026_02_47_39_a.m._ep6xku.png",
       colorClass: "border-purple-600"
     },
     {
       title: "Rotulación Ferretería MG",
-      subtitle: "Se crea una imagen de confianza para sus clientes con materiales novedosos (Led,Alucobond, Acrílico y viniles).",
+      subtitle: "Transformamos la imagen del negocio mediante una combinación de letras LED, Alucobond, acrílico y viniles, logrando una presencia comercial más atractiva y profesional.",
       icon: "https://res.cloudinary.com/licabraham939/image/upload/v1782796534/aestanciacomercial/proyectosfinales/WhatsApp_Image_2026-06-29_at_9.57.40_PM_Editado_npjgbe.jpg",
       colorClass: "border-purple-600"
     },
     {
       title: "Consultorio y Farmacia",
-      subtitle: "Se crea la imagen moderna para Doctor y sus servicios con grabado laser de logotipo y luces led para la fachada sobre acrílico",
+      subtitle: "Diseñamos una fachada moderna para el consultorio con logotipo grabado en acrílico, iluminación LED y acabados de alta calidad que fortalecen la confianza y la imagen profesional.",
       icon: "https://res.cloudinary.com/licabraham939/image/upload/v1782796548/aestanciacomercial/proyectosfinales/WhatsApp_Image_2026-06-29_at_10.00.15_PM_zyouno.jpg",
       colorClass: "border-purple-600"
     },
     {
       title: "Tienda de Persianas",
-      subtitle: "Se crea una imagen digital y procesos de marketing digital",
+      subtitle: "Diseñamos la imagen digital del negocio e implementamos procesos de marketing para aumentar la visibilidad, captar prospectos y fortalecer la presencia de la marca.",
       icon: "https://res.cloudinary.com/licabraham939/image/upload/v1782796550/aestanciacomercial/proyectosfinales/WhatsApp_Image_2026-06-29_at_9.59.49_PM_ndkxvq.jpg",
       colorClass: "border-purple-600"
     },
     {
-      title: "Clientes de Servicio Profesionales (Asesores inmobiliarios, Constructoras,Doctores etc)",
-      subtitle: "Se desarrolla sistema de ventas desde tarjetas de Presentación con Relieve, imprenta UV, bordes y tarjetas diitales",
+      title: "Soluciones para Profesionales y Empresas",
+      subtitle: "Diseñamos herramientas comerciales para asesores inmobiliarios, constructoras, médicos y otros profesionales mediante tarjetas premium, impresión UV, acabados especiales y tarjetas digitales.",
       icon: "https://res.cloudinary.com/licabraham939/image/upload/v1782796080/aestanciacomercial/proyectosfinales/WhatsApp_Image_2026-06-29_at_9.58.01_PM_Editado_vbdl7m.jpg",
       colorClass: "border-purple-600"
     },
     {
       title: "Servicio en la Ceiba",
-      subtitle: "Nuestro servicio es garantizado y profesional adquirido con la experiencia en las ventas.",
+      subtitle: "Acompañamos a cada cliente desde el diagnóstico hasta la entrega final, combinando experiencia, innovación y soluciones que generan valor para su negocio.",
       icon: "https://res.cloudinary.com/licabraham939/image/upload/v1782796674/aestanciacomercial/proyectosfinales/WhatsApp_Image_2026-06-29_at_9.59.36_PM_1_yy9umn.jpg",
       colorClass: "border-purple-600"
     }
   ];
 
-  const cotizacionForm = [
+    const cotizacionForm = $derived([
 
-    {
+	{
+		label:"¿Qué necesitas?",
+		type:"select",
+		options: serviciosStore.servicios
+			.filter(s => s.activo)
+			.map(servicio => servicio.nombre)
+	},
 
-        label:"¿Qué necesitas?",
 
-        type:"select",
+	...(servicioSeleccionado &&
+	serviciosStore.servicios.find(
+		s => s.nombre === servicioSeleccionado
+	)?.unidad === "m²"
 
-        options:[
+	? [
 
-            "Techos Industriales",
+		{
+	label:"¿Cuántos metros aproximados?",
 
-            "Fachadas",
+	type:"number",
 
-            "Letras 3D",
+	placeholder:"Ejemplo: 10"
+},
 
-            "Viniles"
+	]
 
-        ]
+	: []),
 
-    },
 
-    {
+	{
+		label:"¿En qué ciudad estás?",
+		type:"select",
+		options:[
+			"La Ceiba",
+			"Tela",
+			"San Pedro Sula"
+		]
+	}
 
-        label:"¿Cuántos metros aproximados?",
+]);
 
-        type:"select",
+function crearLead(datos: Record<string,string>){
 
-        options:[
+	const cliente = crearCliente({
 
-            "50 m²",
+		nombre: datos.nombre ?? "Cliente web",
 
-            "100 m²",
+		empresa: datos["¿Qué necesitas?"] ?? "",
 
-            "150 m²",
+		telefono: datos.telefono ?? ""
 
-            "200 m²"
+	});
 
-        ]
 
-    },
+	console.log("Nuevo cliente creado:", cliente);
 
-    {
+}
+function actualizarCotizador(datos: Record<string,string>){
 
-        label:"¿En qué ciudad estás?",
+	console.log("DATOS DEL FORMULARIO:", datos);
 
-        type:"select",
 
-        options:[
+	servicioSeleccionado =
+		datos["¿Qué necesitas?"] ?? "";
 
-            "La Ceiba",
 
-            "Tela",
+	const servicio = serviciosStore.servicios.find(
+		s => s.nombre === servicioSeleccionado
+	);
 
-            "San Pedro Sula"
 
-        ]
+	if(!servicio){
+		console.log("Servicio no encontrado");
+		return;
+	}
 
-    }
 
-];
+	let desde = 0;
+	let hasta = 0;
+
+
+// Servicios por metro cuadrado
+if(servicio.unidad === "m²"){
+
+	const area =
+		datos["¿Cuántos metros aproximados?"] ?? 0;
+
+
+	areaSeleccionada = Number(area);
+
+
+	if(areaSeleccionada <= 0){
+
+		console.log("No hay metros ingresados");
+		return;
+
+	}
+
+
+	desde = areaSeleccionada * servicio.precio;
+
+	hasta = desde * 1.3;
+
+
+}
+else {
+		// Servicios por proyecto
+
+		desde = servicio.precio;
+
+		hasta = servicio.precio * 1.3;
+
+	}
+
+
+	estimacion = {
+
+		desde: Math.round(desde),
+
+		hasta: Math.round(hasta)
+
+	};
+
+
+	console.log(
+		"ESTIMACION:",
+		estimacion
+	);
+
+}
 </script>
 
 <Navbar />
@@ -322,12 +393,12 @@
     <!-- Grid de 2 Columnas -->
     <!-- CORRECCIÓN: Usamos 'service' como variable del bucle y pasamos sus propiedades -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-      {#each services as service}
-        <ServiceCard 
-          icon={service.icon}
-          title={service.title}
-          subtitle={service.subtitle}
-          colorClass={service.colorClass}
+      {#each serviciosStore.servicios.filter(s => s.activo) as service}
+        <ServiceCard
+          icon={service.imagen}
+          title={service.nombre}
+          subtitle={service.descripcion}
+          colorClass="border-[#E7A145]"
         />
       {/each}
     </div>
@@ -346,19 +417,26 @@
   blurAmount="backdrop-blur-md"
   padding="py-12"
 />
- <section class="flex justify-center items-center min-h-screen bg-gray-50">
-    
-  <Carousel 
-    before="https://res.cloudinary.com/licabraham939/image/upload/v1782796539/aestanciacomercial/proyectosfinales/WhatsApp_Image_2026-06-29_at_10.05.52_PM_3_rafpxh.jpg" 
-    after="https://res.cloudinary.com/licabraham939/image/upload/v1782796537/aestanciacomercial/proyectosfinales/WhatsApp_Image_2026-06-29_at_10.05.52_PM_2_owasqi.jpg"
-  />
-  <Carousel 
-    before="https://res.cloudinary.com/licabraham939/image/upload/v1782796536/aestanciacomercial/proyectosfinales/WhatsApp_Image_2026-06-29_at_10.05.52_PM_1_umwcbm.jpg" 
-    after="https://res.cloudinary.com/licabraham939/image/upload/v1782796535/aestanciacomercial/proyectosfinales/WhatsApp_Image_2026-06-29_at_10.05.52_PM_wifs7r.jpg"
-  />
-  
- 
+ <section class="flex flex-col gap-10 justify-center items-center bg-gray-50 py-16 px-4">
+
+  <div class="">
+    <Carousel 
+      before="https://res.cloudinary.com/licabraham939/image/upload/v1782796539/aestanciacomercial/proyectosfinales/WhatsApp_Image_2026-06-29_at_10.05.52_PM_3_rafpxh.jpg" 
+      after="https://res.cloudinary.com/licabraham939/image/upload/v1782796537/aestanciacomercial/proyectosfinales/WhatsApp_Image_2026-06-29_at_10.05.52_PM_2_owasqi.jpg"
+    />
+  </div>
+
+
+  <div class="">
+    <Carousel 
+      before="https://res.cloudinary.com/licabraham939/image/upload/v1782796536/aestanciacomercial/proyectosfinales/WhatsApp_Image_2026-06-29_at_10.05.52_PM_1_umwcbm.jpg" 
+      after="https://res.cloudinary.com/licabraham939/image/upload/v1782796535/aestanciacomercial/proyectosfinales/WhatsApp_Image_2026-06-29_at_10.05.52_PM_wifs7r.jpg"
+    />
+  </div>
+
 </section>
+
+
  <Titulo 
   texto="CASOS DE "
   textoHighlight="ÉXITO"
@@ -384,48 +462,35 @@
   Aquí definimos el diseño "Ícono izquierda - Texto derecha".
   Esto NO afecta a los otros ServiceCard que uses en otras páginas.
 -->
-<div class="relative z-40 grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto px-4 py-12 bg-white/40 backdrop-blur-md rounded-xl shadow-md ">
+<div class="relative z-40 grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto px-4 py-12 bg-white/80 backdrop-blur-md rounded-xl shadow-md ">
   {#each serviciosSecundarios as service}
-    
-    <!-- 
-      Aquí creamos el diseño "nuevo" usando un div padre.
-      Le pasamos las clases de diseño a este div, no al componente.
-    -->
-    
-      <!-- 1. Lógica del Icono (Copia exacta de tu ServiceCard.svelte) -->
-      <div class="flex flex-col flex items-center gap-6">
-        <div class={`w-66 h-66  ${service.colorClass.replace('border-', 'bg-')} rounded-2xl flex items-center justify-center text-white text-3xl shadow-sm overflow-hidden`}>
-          {#if service.icon.startsWith('http')}
-            <!-- RENDERIZADO COMO IMAGEN -->
-            <img 
-              src={service.icon} 
-              alt={service.title} 
-              class="h-60 w-auto object-contain transform hover:scale-210 transition-transform duration-300"
-              loading="lazy" 
-            />
-          {:else}
-            <!-- RENDERIZADO COMO TEXTO/EMOJI -->
-            <div class="text-3xl transform hover:scale-110 transition-transform duration-300 text-white">
-              {service.icon}
-            </div>
-          {/if}
+
+  <div class="flex flex-col items-center gap-6">
+
+    <div class="w-86 h-86 rounded-2xl overflow-hidden">
+
+      {#if service.icon.startsWith('http')}
+
+       <ImageModal
+  imagen={service.icon}
+  titulo={service.title}
+  descripcion={service.subtitle}
+/>
+
+      {:else}
+
+        <div class="text-3xl text-white">
+          {service.icon}
         </div>
-      </div>
+
+      {/if}
+
+    </div>
+
+  </div>
 
 
-      <!-- 2. TEXTO A LA DERECHA -->
-      <div class="flex flex-col justify-center">
-        <h3 class="text-xl font-bold text-gray-800 mb-1">
-          {service.title}
-        </h3>
-        <p class="text-gray-600 text-sm leading-relaxed">
-          {service.subtitle}
-        </p>
-      </div>
-
-    
-
-  {/each}
+{/each}
 </div>
 </section>
 
@@ -449,18 +514,19 @@
   padding="py-12"
 />
 
-    <!-- COLUMNA IZQUIERDA: Timeline -->
-    <section class="flex flex-col items-center justify-center bg-white relative">
-      <div class="">
-      <h2 class="text-2xl font-bold mb-6 text-center text-gray-800 dark:text-blue">
-        Proceso de Trabajo
-      </h2>
-      <!-- Aquí pasamos los datos del timeline -->
-      <LeftPanel steps={procesoSteps} />
-    </div>
+<section class="flex flex-col items-center justify-center bg-gray-50 relative py-20 rounded-3xl shadow-inner">
 
-    </section>
-    
+  <div class="w-full max-w-5xl px-8 bg-white rounded-3xl shadow-lg py-10">
+
+    <h2 class="text-4xl md:text-5xl font-bold mb-12 text-center text-gray-900">
+      Proceso de Trabajo
+    </h2>
+
+    <LeftPanel steps={procesoSteps} />
+
+  </div>
+
+</section>
 
   
  <Titulo 
@@ -482,17 +548,59 @@
   blurAmount="backdrop-blur-md"
   padding="py-12"
 />
+
+<div class="relative bg-white z-10">
 <QuoteForm
 
-fields={cotizacionForm}
+	fields={cotizacionForm}
+
+	button="Solicitar Cotización"
+
+	onChange={actualizarCotizador}
+
+/>
+{#if estimacion}
+
+<div class="mt-8 p-6 rounded-3xl bg-emerald-50 border">
+
+<h3 class="text-xl font-bold">
+	Estimación inicial
+</h3>
+
+<p class="mt-3">
+	Desde:
+	<strong>
+		L {estimacion.desde.toLocaleString('es-MX')}
+	</strong>
+</p>
+
+<p>
+	Hasta:
+	<strong>
+		L {estimacion.hasta.toLocaleString('es-MX')}
+	</strong>
+</p>
+
+</div>
+
+{/if}
+{#if estimacion}
+
+<LeadCapture
+
+  onEnviar={(datos: Record<string,string>)=>crearLead({
+			
+		...datos,
+
+		"¿Qué necesitas?": servicioSeleccionado
+
+	})}
 
 />
 
-<div class="flex flex-col gap-4 items-center justify-center w-full max-w-sm mx-auto mt-8 z-10 relative">
-  {#each buttons2 as btn}
-    <Button {btn} />
-  {/each}
+{/if}
 </div>
+
 
 <AccionFin />
 

@@ -1,6 +1,7 @@
 <script>
-	import { plantillas } from '$lib/stores/plantillas.js';
+	import { plantillas, guardarPlantillas } from '$lib/stores/plantillas.js';
 	import { goto } from '$app/navigation';
+	import { campanas } from '$lib/stores/campanas.js';	
 
 
 	let nombre = '';
@@ -13,29 +14,37 @@
 
 	function crear(){
 
-		const nueva = {
+	const nueva = {
 
-			id: Date.now(),
+		id: Date.now(),
 
-			campana,
-			nombre,
-			tipo,
-			texto
+		campana,
+		nombre,
+		tipo,
+		texto
 
-		};
+	};
 
 
-		plantillas.update(lista => [
+	plantillas.update(lista => {
 
+		const nuevas = [
 			...lista,
 			nueva
+		];
 
-		]);
+
+		guardarPlantillas(nuevas);
 
 
-		goto(`/crm/campanas/plantillas/${nueva.id}`);
+		return nuevas;
 
-	}
+	});
+
+
+	goto(`/crm/campanas/plantillas/${nueva.id}`);
+
+}
 
     function nuevaPlantilla(){
 
@@ -70,13 +79,13 @@
 
 <select bind:value={campana}>
 
-	<option value="clientes-inactivos">
-		Clientes inactivos
-	</option>
+	{#each $campanas as item}
 
-	<option value="clientes-nuevos">
-		Clientes nuevos
-	</option>
+		<option value={item.id}>
+			{item.nombre}
+		</option>
+
+	{/each}
 
 </select>
 

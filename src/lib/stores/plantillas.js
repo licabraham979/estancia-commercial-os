@@ -1,8 +1,20 @@
-/** @typedef {import('$lib/types/clientes').Cliente} Cliente */
+/**
+ * @typedef {{
+ * id:number,
+ * campana:string,
+ * nombre:string,
+ * tipo:string,
+ * texto:string
+ * }} Plantilla
+ */
+
 import { writable } from 'svelte/store';
 
 
-export const plantillas = writable([
+const STORAGE_KEY = 'crm_plantillas';
+
+
+const iniciales = [
 
 	{
 		id: 1,
@@ -33,4 +45,58 @@ export const plantillas = writable([
 		'Hola, estamos organizando agenda de proyectos y quería saber si avanzamos con el tuyo.'
 	}
 
-]);
+];
+
+
+/** @returns {Plantilla[]} */
+function cargarPlantillas(){
+
+	if(typeof localStorage === 'undefined'){
+		return iniciales;
+	}
+
+
+	const guardadas = localStorage.getItem(STORAGE_KEY);
+
+
+	if(guardadas){
+
+		return JSON.parse(guardadas);
+
+	}
+
+
+	localStorage.setItem(
+		STORAGE_KEY,
+		JSON.stringify(iniciales)
+	);
+
+
+	return iniciales;
+
+}
+
+
+/** @type {import('svelte/store').Writable<Plantilla[]>} */
+export const plantillas = writable(
+	cargarPlantillas()
+);
+
+
+
+/**
+ * @param {Plantilla[]} datos
+ */
+export function guardarPlantillas(datos){
+
+	if(typeof localStorage === 'undefined'){
+		return;
+	}
+
+
+	localStorage.setItem(
+		STORAGE_KEY,
+		JSON.stringify(datos)
+	);
+
+}

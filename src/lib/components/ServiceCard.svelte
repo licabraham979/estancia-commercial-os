@@ -21,15 +21,14 @@
 
 <article class={cardClasses}>
   <!-- Contenedor del Icono/Imagen -->
-  <div class="w-full flex justify-center items-center mb-6 h-20">
+  <div class="w-full mb-6 h-48 overflow-hidden rounded-xl">
     {#if isImage}
       <!-- Renderizar como Imagen -->
       <img 
-        src={icon} 
-        alt={title} 
-        class="h-16 w-auto object-contain transform group-hover:scale-110 transition-transform duration-300"
-        loading="lazy" 
-      />
+        src={icon}
+        alt={title}
+        class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
+       />
     {:else}
       <!-- Renderizar como Texto/SVG -->
       <div class="text-5xl transform group-hover:scale-110 transition-transform duration-300 text-gray-800">
@@ -50,4 +49,7 @@
 
   <!-- Efecto decorativo -->
   <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#E7A145] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+  <button>
+ Ver proyecto
+</button>
 </article>

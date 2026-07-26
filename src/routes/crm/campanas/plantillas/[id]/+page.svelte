@@ -1,20 +1,30 @@
 <script>
+/** @typedef {{
+	id: number,
+	campana: string,
+	nombre: string,
+	tipo: string,
+	texto: string
+}} Plantilla */
+
 import { plantillas } from '$lib/stores/plantillas.js';
 
 let { params } = $props();
 
 let plantilla = $derived(
     $plantillas.find(
+        /** @param {Plantilla} p */
         p => p.id === Number(params.id)
     )
 );
 
-let variables = $derived(
-    plantilla?.texto.match(/{(.*?)}/g)
-    ?.map(v => v.replace(/[{}]/g,'')) ?? []
-);
-</script>
 
+let variables = $derived(
+	plantilla?.texto.match(/{(.*?)}/g)
+	?.map(v => v.replace(/[{}]/g,'')) ?? []
+);
+
+</script>
 
 {#if plantilla}
 

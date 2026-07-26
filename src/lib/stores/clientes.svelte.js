@@ -122,6 +122,8 @@ clientes.push(nuevoCliente);
 
 guardarClientes();
 
+return nuevoCliente;
+
 }
 
 function guardarClientes() {

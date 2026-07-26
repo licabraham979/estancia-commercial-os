@@ -1,6 +1,14 @@
 <script>
 	import { campanas } from '$lib/stores/campanas.js';
 	import CampanaCard from '$lib/components/crm/campanas/CampanaCard.svelte';
+	import { goto } from '$app/navigation';
+
+
+function nuevaCampana(){
+
+	goto('/crm/campanas/nueva');
+
+}
 </script>
 
 
@@ -8,7 +16,9 @@
 	Campañas
 </h1>
 
-
+<button onclick={nuevaCampana}>
+	+ Nueva campaña
+</button>
 <div class="grid">
 
 	{#each $campanas as campaña}

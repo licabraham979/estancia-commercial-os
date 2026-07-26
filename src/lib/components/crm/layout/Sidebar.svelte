@@ -15,6 +15,14 @@
 			ruta: '/crm/pipeline'
 		},
 		{
+			nombre: 'Catálogo Maestro',
+			ruta: '/crm/catalogo'
+		},
+		{
+			nombre: 'Cotizaciones',
+			ruta: '/crm/cotizaciones'
+		},
+		{
 			nombre: 'Campañas',
 			ruta: '/crm/campanas'
 		},

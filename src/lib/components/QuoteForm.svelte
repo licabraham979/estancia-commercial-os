@@ -1,16 +1,42 @@
 <script lang="ts">
 
 let {
-
-    fields = [],
-
-    button = "Solicitar Cotización"
-
+	fields = [],
+	button = "Solicitar Cotización",
+	onSubmit = null,
+	onChange = null,
+	className = ''
 } = $props();
 
-</script>
+let valores = $state<Record<string, string>>({});
 
-<div class="space-y-5 w-full relative bg-white">
+
+function actualizarCampo(label: string, value: string){
+
+	valores[label] = value;
+
+
+	if(onChange){
+
+		onChange(valores);
+
+	}
+
+}
+
+
+function enviar(){
+
+	if(onSubmit){
+
+		onSubmit(valores);
+
+	}
+
+}
+
+</script>
+<div class={`space-y-5 w-full relative ${className}`}>
 
     {#each fields as field}
 
@@ -48,6 +74,12 @@ let {
 
                 <select
 
+	bind:value={valores[field.label]}
+
+	onchange={(e)=>actualizarCampo(
+		field.label,
+		e.currentTarget.value
+	)}
                     class="
                     w-full
                     h-14
@@ -88,6 +120,13 @@ let {
 
                     placeholder={field.placeholder}
 
+                    bind:value={valores[field.label]}
+
+                    oninput={(e)=>actualizarCampo(
+        field.label,
+        e.currentTarget.value
+    )}
+
                     class="
                     w-full
                     h-14
@@ -114,5 +153,18 @@ let {
         </div>
 
     {/each}
-
+<button
+	class="
+	bg-cyan-600
+	text-white
+	rounded-2xl
+	px-6
+	py-4
+	font-bold
+	w-full
+	"
+	onclick={enviar}
+>
+	{button}
+</button>
 </div>

@@ -37,26 +37,41 @@
 </script>
 
 <div 
-  class="relative w-full flex justify-center items-center" 
+  class="relative flex justify-center items-center" 
   style="width: {width}; height: {height};"
 >
-  <div class="embla__viewport overflow-hidden w-full h-full" bind:this={emblaRef}>
+  <div class="embla__viewport overflow-hidden  h-full" bind:this={emblaRef}>
     <div class="embla__container flex h-full">
-      <!-- Slide 1 -->
-      <div class="embla__slide flex-[0_0_100%] min-w-0 relative h-full">
-        <img src={before} alt={beforeLabel} class="w-full h-full " />
-        <div class="absolute top-4 left-4 bg-black/60 text-white px-3 py-1 rounded text-sm font-bold">
-          {beforeLabel}
-        </div>
-      </div>
+    <!-- Slide 1 -->
+<div class="embla__slide flex-[0_0_100%] min-w-0 relative overflow-hidden rounded-xl">
 
-      <!-- Slide 2 -->
-      <div class="embla__slide flex-[0_0_100%] min-w-0 relative h-full">
-        <img src={after} alt={afterLabel} class="w-full h-full object-cover" />
-        <div class="absolute top-4 right-4 bg-black/60 text-white px-3 py-1 rounded text-sm font-bold">
-          {afterLabel}
-        </div>
-      </div>
+  <img 
+    src={before} 
+    alt={beforeLabel} 
+    class="w-full h-[450px] md:h-[550px] "
+  />
+
+  <div class="absolute top-4 left-4 bg-black/60 text-white px-3 py-1 rounded text-sm font-bold">
+    {beforeLabel}
+  </div>
+
+</div>
+
+
+<!-- Slide 2 -->
+<div class="embla__slide flex-[0_0_100%] min-w-0 relative overflow-hidden rounded-xl">
+
+  <img 
+    src={after} 
+    alt={afterLabel} 
+    class="w-full h-[450px] md:h-[550px] "
+  />
+
+  <div class="absolute top-4 right-4 bg-black/60 text-white px-3 py-1 rounded text-sm font-bold">
+    {afterLabel}
+  </div>
+
+</div>
     </div>
   </div>
 

@@ -18,6 +18,30 @@
 
 	}
 
+	function editarCampana(){
+
+	goto(`/crm/campanas/${id}/editar`);
+
+}
+
+function colorEstado(){
+
+	if(estado === 'Activa'){
+		return 'activa';
+	}
+
+	if(estado === 'Borrador'){
+		return 'borrador';
+	}
+
+	if(estado === 'Pausada'){
+		return 'pausada';
+	}
+
+	return '';
+
+}
+
 </script>
 
 
@@ -30,9 +54,9 @@
 			{nombre}
 		</h3>
 
-		<span>
-			{estado}
-		</span>
+		<span class={colorEstado()}>
+	{estado}
+</span>
 
 	</div>
 
@@ -46,16 +70,25 @@
 
 	<div class="footer">
 
-		<p>
-			Clientes: {clientes}
-		</p>
+	<p>
+		Clientes: {clientes}
+	</p>
 
+
+	<div class="acciones">
 
 		<button onclick={abrirCampana}>
-	Abrir campaña
-</button>
+			Abrir
+		</button>
+
+
+		<button onclick={editarCampana}>
+			Editar
+		</button>
 
 	</div>
+
+</div>
 
 
 </div>
@@ -102,8 +135,6 @@ h3 {
 
 span {
 
-	background:#2563eb;
-
 	color:white;
 
 	padding:5px 10px;
@@ -111,6 +142,27 @@ span {
 	border-radius:20px;
 
 	font-size:12px;
+
+}
+
+
+.activa {
+
+	background:#16a34a;
+
+}
+
+
+.borrador {
+
+	background:#6b7280;
+
+}
+
+
+.pausada {
+
+	background:#ca8a04;
 
 }
 
@@ -150,6 +202,13 @@ button {
 button:hover {
 
 	background:#2563eb;
+
+}
+
+.acciones{
+
+	display:flex;
+	gap:10px;
 
 }
 

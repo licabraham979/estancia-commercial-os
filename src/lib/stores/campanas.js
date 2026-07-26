@@ -1,8 +1,23 @@
-/** @typedef {import('$lib/types/clientes').Cliente} Cliente */
+/**
+ * @typedef {{
+ * id:string,
+ * nombre:string,
+ * descripcion:string,
+ * estado:string,
+ * clientes:number,
+ * objetivo:string,
+ * mensaje:string
+ * }} Campana
+ */
+
 import { writable } from 'svelte/store';
 
 
-export const campanas = writable([
+const STORAGE_KEY = 'crm_campanas';
+
+
+const iniciales = [
+
 	{
 		id: 'clientes-inactivos',
 		nombre: 'Clientes inactivos',
@@ -12,4 +27,63 @@ export const campanas = writable([
 		objetivo: 'Recuperar oportunidades.',
 		mensaje: 'Hola, queremos ayudarte con tu proyecto.'
 	}
-]);
+
+];
+
+
+
+/**
+ * @returns {Campana[]}
+ */
+function cargarCampanas(){
+
+	if(typeof localStorage === 'undefined'){
+		return iniciales;
+	}
+
+
+	const guardadas = localStorage.getItem(STORAGE_KEY);
+
+
+	if(guardadas){
+
+		return JSON.parse(guardadas);
+
+	}
+
+
+	localStorage.setItem(
+		STORAGE_KEY,
+		JSON.stringify(iniciales)
+	);
+
+
+	return iniciales;
+
+}
+
+
+
+/** @type {import('svelte/store').Writable<Campana[]>} */
+export const campanas = writable(
+	cargarCampanas()
+);
+
+
+
+/**
+ * @param {Campana[]} datos
+ */
+export function guardarCampanas(datos){
+
+	if(typeof localStorage === 'undefined'){
+		return;
+	}
+
+
+	localStorage.setItem(
+		STORAGE_KEY,
+		JSON.stringify(datos)
+	);
+
+}

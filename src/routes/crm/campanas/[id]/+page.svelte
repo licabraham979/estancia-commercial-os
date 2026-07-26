@@ -132,17 +132,6 @@
 
 </div>
 
-<div class="panel mensaje">
-
-<h3>
-	Mensaje
-</h3>
-
-<p>
-	{campaña.mensaje}
-</p>
-
-</div>
 
 
 </div>

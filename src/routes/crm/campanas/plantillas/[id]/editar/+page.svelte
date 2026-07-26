@@ -1,10 +1,27 @@
 <script>
 
-    import { plantillas } from '$lib/stores/plantillas.js';
+    import { plantillas, guardarPlantillas } from '$lib/stores/plantillas.js';
 
 	import { goto } from '$app/navigation';
 
 	let { params } = $props();
+
+	let plantilla = $derived(
+	$plantillas.find(
+		p => p.id === Number(params.id)
+	)
+);
+
+	$effect(() => {
+
+	if(plantilla){
+
+		titulo = plantilla.nombre;
+		mensaje = plantilla.texto;
+
+	}
+
+});
 
 	let titulo = "Cliente sin respuesta";
 	let mensaje = "Hola {nombre}, seguimos pendientes de tu proyecto.";
@@ -13,7 +30,7 @@
 
 	plantillas.update(lista => {
 
-		return lista.map(p => {
+		const nuevas = lista.map(p => {
 
 			if(p.id === Number(params.id)){
 
@@ -29,12 +46,18 @@
 
 		});
 
+
+		guardarPlantillas(nuevas);
+
+
+		return nuevas;
+
 	});
+
 
 	goto(`/crm/campanas/plantillas/${params.id}`);
 
 }
-
 </script>
 
 
