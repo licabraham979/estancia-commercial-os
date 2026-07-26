@@ -43,6 +43,7 @@
 	},
 	"dependencies": {
 		"@supabase/supabase-js": "^2.110.8",
+		"@vercel/analytics": "^2.0.1",
 		"embla-carousel": "^8.6.0",
 		"embla-carousel-svelte": "^8.6.0",
 		"motion": "^12.42.0"
