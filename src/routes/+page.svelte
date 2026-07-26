@@ -14,6 +14,7 @@
   import { serviciosStore } from '$lib/stores/catalogo/servicios.svelte.js';
   import { crearCliente } from '$lib/stores/clientes.svelte.js';
   import ImageModal from '$lib/components/crm/ui/ImageModal.svelte';
+  import { crearLead } from '$lib/supabase/leads';
   
   let servicioSeleccionado = $state('');
 let areaSeleccionada = $state(0);
@@ -255,7 +256,7 @@ let estimacion = $derived(
 
 ]);
 
-function crearLead(datos: Record<string,string>){
+function registrarCliente(datos: Record<string,string>){
 
 	const cliente = crearCliente({
 
@@ -271,9 +272,48 @@ function crearLead(datos: Record<string,string>){
 	console.log("Nuevo cliente creado:", cliente);
 
 }
+async function guardarLead(datos: Record<string,string>){
+
+	const lead = {
+
+		nombre: datos.nombre ?? "",
+
+		telefono: datos.telefono ?? "",
+
+		email: datos.email ?? "",
+
+		empresa: datos.empresa ?? "",
+
+		ciudad: datos["¿En qué ciudad estás?"] ?? "",
+
+		servicio: servicioSeleccionado,
+
+		metros: datos["¿Cuántos metros aproximados?"] ?? "",
+
+		estimacion_desde: estimacion?.desde ?? 0,
+
+		estimacion_hasta: estimacion?.hasta ?? 0,
+
+		mensaje: datos.mensaje ?? "",
+
+		estado: "Nuevo"
+
+	};
+
+
+	const resultado = await crearLead(lead);
+
+
+	console.log(resultado);
+
+}
+
 function actualizarCotizador(datos: Record<string,string>){
 
-	console.log("DATOS DEL FORMULARIO:", datos);
+	console.log(
+ "DATOS DEL FORMULARIO:",
+ $state.snapshot(datos)
+);
 
 
 	servicioSeleccionado =
@@ -587,15 +627,7 @@ else {
 {#if estimacion}
 
 <LeadCapture
-
-  onEnviar={(datos: Record<string,string>)=>crearLead({
-			
-		...datos,
-
-		"¿Qué necesitas?": servicioSeleccionado
-
-	})}
-
+	onEnviar={guardarLead}
 />
 
 {/if}
