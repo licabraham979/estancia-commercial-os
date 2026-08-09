@@ -160,41 +160,249 @@ let estimacion = $derived(
   
   const serviciosSecundarios = [
     {
-      title: "Salón de Estética ELORA", // Tus NUEVOS títulos
-      subtitle: "Renovamos la imagen del negocio mediante letras en acrílico de 6 mm con acabado Rose Gold e iluminación LED, logrando una fachada moderna y de mayor presencia comercial.",
-      icon: "https://res.cloudinary.com/licabraham939/image/upload/v1782796543/aestanciacomercial/proyectosfinales/WhatsApp_Image_2026-06-29_at_10.05.52_PM_6_clhp3q.jpg", // Tus NUEVAS imágenes
-      colorClass: "border-purple-600"
-    },
-    {
-      title: "Ferretería MACTOOLS",
-      subtitle: "Fabricamos una lona en impresión HD con tintas UV para exterior e instalamos el rótulo en un tercer nivel, logrando máxima visibilidad y resistencia a la intemperie.",
-      icon: "https://res.cloudinary.com/licabraham939/image/upload/v1782796448/aestanciacomercial/proyectosfinales/WhatsApp_Image_2026-06-29_at_9.51.37_PM_iiabof.jpg",
-      colorClass: "border-purple-600"
-    },
-    {
-      title: "Rotulación con Pintura",
-      subtitle: "Renovamos la imagen corporativa mediante pintura de alta resistencia, resaltando la identidad de la marca en una moderna fachada de vidrio.",
-      icon: "https://res.cloudinary.com/licabraham939/image/upload/v1782808782/aestanciacomercial/proyectosfinales/IMG_20260429_141057_jfixwo.jpg",
-      colorClass: "border-purple-600"
-    },
-    {
-      title: "Rotulación Vinil Microperforado",
-      subtitle: "Acompañamos la apertura del salón con rotulación en vinil microperforado y mobiliario comercial, entregando un espacio listo para recibir clientes desde el primer día.",
-      icon: "https://res.cloudinary.com/licabraham939/image/upload/v1782809287/aestanciacomercial/proyectosfinales/ChatGPT_Image_30_jun_2026_02_47_39_a.m._ep6xku.png",
-      colorClass: "border-purple-600"
-    },
-    {
-      title: "Rotulación Ferretería MG",
-      subtitle: "Transformamos la imagen del negocio mediante una combinación de letras LED, Alucobond, acrílico y viniles, logrando una presencia comercial más atractiva y profesional.",
-      icon: "https://res.cloudinary.com/licabraham939/image/upload/v1782796534/aestanciacomercial/proyectosfinales/WhatsApp_Image_2026-06-29_at_9.57.40_PM_Editado_npjgbe.jpg",
-      colorClass: "border-purple-600"
-    },
-    {
-      title: "Consultorio y Farmacia",
-      subtitle: "Diseñamos una fachada moderna para el consultorio con logotipo grabado en acrílico, iluminación LED y acabados de alta calidad que fortalecen la confianza y la imagen profesional.",
-      icon: "https://res.cloudinary.com/licabraham939/image/upload/v1782796548/aestanciacomercial/proyectosfinales/WhatsApp_Image_2026-06-29_at_10.00.15_PM_zyouno.jpg",
-      colorClass: "border-purple-600"
-    },
+  title: "Salón de Estética ELORA",
+
+  subtitle:
+    "Alfredo nos contactó mientras remodelaba un local que había rentado para instalar su salón de estética. Nos compartió su logotipo y buscaba conocer diferentes opciones para darle una nueva presencia a la fachada.",
+
+  icon:
+    "https://res.cloudinary.com/licabraham939/image/upload/v1782796543/aestanciacomercial/proyectosfinales/WhatsApp_Image_2026-06-29_at_10.05.52_PM_6_clhp3q.jpg",
+
+  galeria: [
+  "https://res.cloudinary.com/licabraham939/image/upload/v1782796543/aestanciacomercial/proyectosfinales/WhatsApp_Image_2026-06-29_at_10.05.52_PM_6_clhp3q.jpg",
+  "https://res.cloudinary.com/licabraham939/image/upload/v1786256770/aestanciacomercial/proyectosfinales/elora/ChatGPT_Image_9_ago_2026_12_14_53_a.m._Editado_3_xbk7ub.png",
+  "https://res.cloudinary.com/licabraham939/image/upload/v1786256770/aestanciacomercial/proyectosfinales/elora/ChatGPT_Image_9_ago_2026_12_14_53_a.m._Editado_2_ey2nqz.png",
+  "https://res.cloudinary.com/licabraham939/image/upload/v1786256769/aestanciacomercial/proyectosfinales/elora/ChatGPT_Image_9_ago_2026_12_14_53_a.m._Editado_4_vxumns.png",
+  "https://res.cloudinary.com/licabraham939/image/upload/v1786256770/aestanciacomercial/proyectosfinales/elora/ChatGPT_Image_9_ago_2026_12_14_53_a.m._Editado_3_xbk7ub.png"
+],
+
+  colorClass: "border-purple-600",
+
+  historia:
+    "Alfredo nos contactó mientras remodelaba un local que había rentado para instalar su salón de estética. Nos compartió su logotipo y buscaba conocer diferentes opciones para darle una nueva presencia a la fachada. Al visitar el negocio conocimos el espacio y el reto que representaba diferenciar el salón de la barbería que se encontraba a un lado.",
+
+  problema:
+   "El local todavía estaba en proceso de remodelación y el salón compartiría espacio junto a otro negocio. El reto era crear una fachada que identificara claramente al salón, destacara frente al negocio vecino y mantuviera presencia durante el día y la noche.",
+
+  solucion:
+    "Presentamos tres alternativas de rotulación. La propuesta elegida utilizó las letras del logotipo en acrílico Rose Gold, instaladas con separadores para generar un efecto tridimensional y posteriormente complementadas con iluminación LED.",
+
+  materiales: [
+    "Acrílico",
+    "Separadores para efecto 3D",
+    "Lámparas LED",
+    "Acabado Rose Gold"
+  ],
+
+  resultado:
+     "El resultado fue una fachada que diferencia al salón y mantiene visible su identidad después del anochecer. En lugar de utilizar tiras LED, instalamos lámparas estratégicamente para generar halos de luz alrededor del logotipo, convirtiendo la fachada en un elemento de presencia comercial tanto de día como de noche.",
+
+  textoCopiar:
+  "Me interesa una solución similar para mi negocio. ¿Podrían orientarme?"
+},
+   
+{
+  title: "Ferretería MACTOOLS",
+
+  subtitle:
+    "Renovamos una lona deteriorada con impresión de alta calidad para exterior, mejorando la presencia y durabilidad de la fachada.",
+
+  icon:
+    "https://res.cloudinary.com/licabraham939/image/upload/v1782796448/aestanciacomercial/proyectosfinales/WhatsApp_Image_2026-06-29_at_9.51.37_PM_iiabof.jpg",
+
+  galeria: [
+    "https://res.cloudinary.com/licabraham939/image/upload/v1782796448/aestanciacomercial/proyectosfinales/WhatsApp_Image_2026-06-29_at_9.51.37_PM_iiabof.jpg",
+    "https://res.cloudinary.com/licabraham939/image/upload/v1786258075/aestanciacomercial/proyectosfinales/mactools/ChatGPT_Image_9_ago_2026_12_46_30_a.m._Editado_nlib1h.png",
+    "https://res.cloudinary.com/licabraham939/image/upload/v1786258074/aestanciacomercial/proyectosfinales/mactools/ChatGPT_Image_9_ago_2026_12_46_30_a.m._Editado_2_wpedww.png"
+  ],
+
+  colorClass: "border-purple-600",
+
+  historia:
+    "Conocimos al cliente durante una visita comercial que realizábamos negocio por negocio. Al observar que la lona de la fachada estaba deteriorada, le entregamos nuestra tarjeta y nos pidió que tomáramos las medidas en ese momento. Después de realizar la medición le entregamos la cotización y nos comentó que ya tenía contemplado realizar el cambio y que incluso contaba con el diseño preparado.",
+
+  problema:
+    "Aunque el cliente ya tenía previsto el gasto, su carga de trabajo le impedía llevar el diseño a impresión. Además, el archivo presentaba problemas técnicos: estaba pixelado y no se encontraba preparado en curvas para una impresión de calidad.",
+
+  solucion:
+    "Nos ofrecimos a encargarnos del proceso para facilitarle el trabajo. Revisamos el archivo, resolvimos el problema de calidad y realizamos la impresión utilizando un sistema adecuado para exterior, con tintas UV para lograr una imagen más resistente y con mejor presencia. Al momento de realizar la instalación, el cliente quedó satisfecho con el resultado y nos solicitó una segunda lona.",
+
+  materiales: [
+    "Lona para exterior",
+    "Impresión de alta calidad",
+    "Tintas UV",
+    "Materiales de instalación"
+  ],
+
+  resultado:
+    "El proyecto se concretó después de aproximadamente un mes y medio, ya que la carga de trabajo del cliente retrasó la compra. Durante ese tiempo mantuvimos el seguimiento y permanecimos disponibles para ayudarle a avanzar. Finalmente, además de renovar la primera lona, el cliente nos solicitó una segunda. El resultado fue una solución que no solo mejoró la imagen de la fachada, sino que le permitió al cliente resolver un trabajo pendiente sin tener que encargarse personalmente del proceso de impresión e instalación.",
+
+  textoCopiar:
+    "Me interesa una solución similar para mi negocio. ¿Podrían orientarme?"
+},
+
+{
+  title: "Templa Cristal y Acero",
+
+  subtitle:
+    "Transformamos un muro comercial en una identificación de gran formato mediante rotulación con pintura y un logotipo de alto impacto.",
+
+  icon:
+    "https://res.cloudinary.com/licabraham939/image/upload/v1782808782/aestanciacomercial/proyectosfinales/IMG_20260429_141057_jfixwo.jpg",
+
+  galeria: [
+    "https://res.cloudinary.com/licabraham939/image/upload/v1782808782/aestanciacomercial/proyectosfinales/IMG_20260429_141057_jfixwo.jpg",
+    "https://res.cloudinary.com/licabraham939/image/upload/v1786258879/aestanciacomercial/proyectosfinales/templacristal%20y%20acero/ChatGPT_Image_9_ago_2026_12_59_35_a.m._Editado_hkxrei.png",
+    "https://res.cloudinary.com/licabraham939/image/upload/v1786258878/aestanciacomercial/proyectosfinales/templacristal%20y%20acero/ChatGPT_Image_9_ago_2026_12_59_35_a.m._Editado_2_tpwyin.png",
+    "https://res.cloudinary.com/licabraham939/image/upload/v1786258876/aestanciacomercial/proyectosfinales/templacristal%20y%20acero/ChatGPT_Image_9_ago_2026_12_59_35_a.m._Editado_3_nkzoyb.png"
+  ],
+
+  colorClass: "border-purple-600",
+
+  historia:
+    "Conocimos a la Licenciada Ángeles durante una jornada de prospección en campo. Visitamos su oficina, ubicada en una plaza comercial, que funcionaba como matriz de varias sucursales. Nos explicó que llevaba tiempo buscando un proveedor de rotulación y no había encontrado una opción que se ajustara a lo que necesitaba. Nos compartió las medidas y fotografías de la fachada que quería intervenir.",
+
+  problema:
+    "El proyecto requería rotular una nueva sucursal ubicada en una nave que funcionaba tanto como área de trabajo como punto de venta. Antes de ejecutar el trabajo necesitábamos comprobar las condiciones del muro, sus dimensiones y la viabilidad de realizar la rotulación directamente sobre la superficie.",
+
+  solucion:
+    "Facilitamos la visita a la nueva sucursal para revisar personalmente el muro y determinar la mejor forma de ejecutar el proyecto. Después de obtener la autorización correspondiente, realizamos la rotulación con pintura en dos manos, incorporando un logotipo de gran formato con efecto visual tridimensional, letras grandes y legibles y los tres números de WhatsApp de la empresa.",
+
+  materiales: [
+    "Pintura para rotulación",
+    "Dos manos de aplicación",
+    "Diseño de logotipo en gran formato",
+    "Rotulación de números de WhatsApp"
+  ],
+
+  resultado:
+    "El trabajo fue terminado en dos días. La Licenciada Ángeles pudo visitar la sucursal durante una mañana para conocer el avance y encontró el proyecto terminado, con una identificación clara, visible y de gran presencia. El resultado superó sus expectativas y convirtió el muro de la nueva sucursal en un elemento de identificación comercial para la empresa.",
+
+  textoCopiar:
+    "Me interesa una solución similar para mi negocio. ¿Podrían orientarme?"
+},
+
+
+{
+  title: "Siempre Bella",
+
+  subtitle:
+    "Acompañamos la inauguración de un salón de estética con rotulación en vinil microperforado y apoyo para completar el proyecto.",
+
+  icon:
+    "https://res.cloudinary.com/licabraham939/image/upload/v1782809287/aestanciacomercial/proyectosfinales/ChatGPT_Image_30_jun_2026_02_47_39_a.m._ep6xku.png",
+
+  galeria: [
+    "https://res.cloudinary.com/licabraham939/image/upload/v1782809287/aestanciacomercial/proyectosfinales/ChatGPT_Image_30_jun_2026_02_47_39_a.m._ep6xku.png",
+    "https://res.cloudinary.com/licabraham939/image/upload/v1786260371/aestanciacomercial/proyectosfinales/siemprebella/ChatGPT_Image_9_ago_2026_01_24_34_a.m._Editado_sdjyqq.png",
+    "https://res.cloudinary.com/licabraham939/image/upload/v1786260369/aestanciacomercial/proyectosfinales/siemprebella/ChatGPT_Image_9_ago_2026_01_24_34_a.m._Editado_2_pxrpts.png",
+    "https://res.cloudinary.com/licabraham939/image/upload/v1786260369/aestanciacomercial/proyectosfinales/siemprebella/ChatGPT_Image_9_ago_2026_01_24_34_a.m._Editado_3_nhtsod.png"
+  ],
+
+  colorClass: "border-purple-600",
+
+  historia:
+    "El cliente nos contactó a través de Facebook buscando una solución para la inauguración del salón de estética que estaba preparando para su esposa como regalo del Día de las Madres. Aunque el negocio se encontraba en un sector de difícil acceso, coordinamos el proyecto y trabajamos a partir de las ideas que tenía para darle una nueva imagen al espacio.",
+
+  problema:
+    "El cliente necesitaba tener listo el salón para una fecha especial y buscaba un vinil microperforado que ayudara a transformar la imagen del local. Sin embargo, durante el proceso también tuvo problemas con el proveedor al que había encargado los muebles de estética, poniendo en riesgo parte del proyecto y del regalo que había preparado.",
+
+  solucion:
+    "Presentamos diferentes propuestas de diseño para el vinil microperforado y, al conocer la situación con el mobiliario, buscamos una forma de ayudarlo a completar su proyecto. Gracias a nuestra experiencia previa trabajando con un fabricante de muebles para barberías y estética, pudimos proporcionarle un contacto confiable para que pudiera gestionar directamente la fabricación del mobiliario y hacer realidad el proyecto que tenía planeado.",
+
+  materiales: [
+    "Vinil microperforado",
+    "Diseño e impresión",
+    "Mobiliario de estética mediante proveedor recomendado"
+  ],
+
+  resultado:
+    "El proyecto permitió que el cliente avanzara con la imagen del nuevo salón y encontrara una alternativa para resolver el problema con el mobiliario. Más que entregar únicamente una pieza de rotulación, pudimos acompañarlo en un momento importante para su negocio y ayudarle a acercarse al resultado que había imaginado para la inauguración y el regalo de su esposa.",
+
+  textoCopiar:
+    "Me interesa una solución similar para mi negocio. ¿Podrían orientarme?"
+},
+
+
+{
+  title: "Ferretería MG",
+
+  subtitle:
+    "Modernizamos la fachada con Alucobond y elementos de venta pensados para transmitir confianza y permanencia.",
+
+  icon:
+    "https://res.cloudinary.com/licabraham939/image/upload/v1782796534/aestanciacomercial/proyectosfinales/WhatsApp_Image_2026-06-29_at_9.57.40_PM_Editado_npjgbe.jpg",
+
+  galeria: [
+    "https://res.cloudinary.com/licabraham939/image/upload/v1782796534/aestanciacomercial/proyectosfinales/WhatsApp_Image_2026-06-29_at_9.57.40_PM_Editado_npjgbe.jpg",
+    ""
+  ],
+
+  colorClass: "border-purple-600",
+
+  historia:
+    "El cliente llegó buscando específicamente una fachada moderna elaborada con Alucobond. Durante la conversación conocimos mejor su negocio y descubrimos que la ferretería ya contaba con cinco años de trayectoria.",
+
+  problema:
+    "El objetivo no era únicamente cambiar la apariencia de la fachada. El cliente buscaba proyectar una imagen más moderna y profesional que ayudara a transmitir confianza a sus clientes y reforzara la percepción de que el negocio estaba establecido y continuaría atendiendo sus necesidades.",
+
+  solucion:
+    "Además del uso de Alucobond, recomendamos incorporar diferentes elementos de venta para que la fachada no funcionara únicamente como decoración, sino como una herramienta de comunicación comercial. La propuesta buscó aprovechar la trayectoria de cinco años del negocio para transmitir permanencia, confianza y disponibilidad para sus clientes.",
+
+  materiales: [
+    "Alucobond",
+    "Elementos de rotulación",
+    "Elementos de comunicación comercial"
+  ],
+
+  resultado:
+    "La nueva fachada permitió darle a Ferretería MG una presencia más moderna y profesional, mientras que los elementos de venta ayudaron a comunicar una idea importante para el negocio: cinco años de permanencia y el compromiso de seguir ahí para ofrecer a sus clientes los materiales que necesitan.",
+
+  textoCopiar:
+    "Me interesa una solución similar para mi negocio. ¿Podrían orientarme?"
+},
+
+
+{
+  title: "Consultorio y Farmacia",
+
+  subtitle:
+    "Modernizamos la imagen del consultorio conservando su identidad y combinando acrílico grabado con láser y vinil decorativo.",
+
+  icon:
+    "https://res.cloudinary.com/licabraham939/image/upload/v1786261337/aestanciacomercial/proyectosfinales/Captura_desde_2026-08-09_01-37-46_bkginq.png",
+
+  galeria: [
+    "https://res.cloudinary.com/licabraham939/image/upload/v1786261337/aestanciacomercial/proyectosfinales/Captura_desde_2026-08-09_01-37-46_bkginq.png",
+    "https://res.cloudinary.com/licabraham939/image/upload/v1786261325/aestanciacomercial/proyectosfinales/ChatGPT_Image_9_ago_2026_01_40_20_a.m._Editado_luemoh.png",
+    "https://res.cloudinary.com/licabraham939/image/upload/v1786261323/aestanciacomercial/proyectosfinales/ChatGPT_Image_9_ago_2026_01_40_20_a.m._Editado_2_aany1v.png",
+    "https://res.cloudinary.com/licabraham939/image/upload/v1786261322/aestanciacomercial/proyectosfinales/ChatGPT_Image_9_ago_2026_01_40_20_a.m._Editado_3_tds7hh.png"
+  ],
+
+  colorClass: "border-purple-600",
+
+  historia:
+    "El cliente buscaba renovar la imagen de su consultorio sin perder la identidad que ya había construido. Su intención era conservar el diseño de su logotipo, pero llevarlo a una presentación más moderna y profesional.",
+
+  problema:
+    "El reto era actualizar la imagen del espacio sin modificar un elemento importante para el negocio: su identidad visual. Además del consultorio, el proyecto debía integrar la farmacia para conseguir una imagen más uniforme.",
+
+  solucion:
+    "Propusimos utilizar el logotipo en acrílico con grabado láser para darle una presentación más limpia y moderna, conservando el diseño original. Como complemento, incorporamos una sección de vinil para el área del consultorio y la farmacia, creando una composición visual que integrara ambos espacios.",
+
+  materiales: [
+    "Acrílico",
+    "Grabado láser",
+    "Vinil decorativo"
+  ],
+
+  resultado:
+    "El consultorio logró renovar su imagen manteniendo la identidad que sus clientes ya reconocían. La combinación de acrílico grabado y vinil permitió darle al espacio una apariencia más moderna, profesional y coherente entre el consultorio y la farmacia.",
+
+  textoCopiar:
+    "Me interesa una solución similar para mi negocio. ¿Podrían orientarme?"
+},
+
     {
       title: "Tienda de Persianas",
       subtitle: "Diseñamos la imagen digital del negocio e implementamos procesos de marketing para aumentar la visibilidad, captar prospectos y fortalecer la presencia de la marca.",
@@ -509,13 +717,13 @@ else {
   padding="py-12"
 />
 <section>
-
+<Casosexito casos={serviciosSecundarios} />
 <!-- 
   CONTENEDOR PERSONALIZADO:
   Aquí definimos el diseño "Ícono izquierda - Texto derecha".
   Esto NO afecta a los otros ServiceCard que uses en otras páginas.
 -->
-<div class="relative z-40 grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto px-4 py-12 bg-white/80 backdrop-blur-md rounded-xl shadow-md ">
+<!-- <div class="relative z-40 grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto px-4 py-12 bg-white/80 backdrop-blur-md rounded-xl shadow-md ">
   {#each serviciosSecundarios as service}
 
   <div class="flex flex-col items-center gap-6">
@@ -544,7 +752,7 @@ else {
 
 
 {/each}
-</div>
+</div> -->
 </section>
 
  <Titulo 
