@@ -9,7 +9,11 @@ export async function GET({ url }) {
 	const challenge = url.searchParams.get('hub.challenge');
 
 	const verifyToken = env.META_VERIFY_TOKEN;
-
+console.log('🔐 META_VERIFY_TOKEN existe:', !!verifyToken);
+console.log('🔐 Longitud META_VERIFY_TOKEN:', verifyToken?.length);
+console.log('🔐 Token recibido existe:', !!token);
+console.log('🔐 Longitud token recibido:', token?.length);
+console.log('🔐 Mode:', mode);	
 	if (
 		mode === 'subscribe' &&
 		token === verifyToken
