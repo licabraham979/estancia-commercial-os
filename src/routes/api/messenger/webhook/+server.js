@@ -24,8 +24,15 @@ console.log('🔐 Mode:', mode);
 	}
 
 	return new Response('Forbidden', {
-		status: 403
-	});
+	status: 403,
+	headers: {
+		'x-debug-token-exists': String(!!verifyToken),
+		'x-debug-token-length': String(verifyToken?.length ?? 0),
+		'x-debug-received-exists': String(!!token),
+		'x-debug-received-length': String(token?.length ?? 0),
+		'x-debug-mode': String(mode ?? 'null')
+	}
+});
 }
 
 export async function POST({ request }) {
