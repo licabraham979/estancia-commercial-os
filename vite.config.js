@@ -5,6 +5,9 @@ import adapter from '@sveltejs/adapter-vercel';
 import { sveltekit } from '@sveltejs/kit/vite';
 
 export default defineConfig({
+	server: {
+	allowedHosts: ['photos-prev-committees-outside.trycloudflare.com']
+},
 	plugins: [
 		tailwindcss(),
 		sveltekit({
