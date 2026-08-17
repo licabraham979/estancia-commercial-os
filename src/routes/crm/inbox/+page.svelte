@@ -39,6 +39,76 @@
 	let cargandoMensajes = $state(false);
 	let error = $state('');
 
+	let mensajeNuevo = $state('');
+let enviandoMensaje = $state(false);
+
+async function enviarMensaje() {
+	if (
+		!conversacionSeleccionada ||
+		!mensajeNuevo.trim() ||
+		enviandoMensaje
+	) {
+		return;
+	}
+
+	try {
+		enviandoMensaje = true;
+		error = '';
+
+		const respuesta = await fetch(
+			`/api/messenger/conversations/${conversacionSeleccionada.id}`,
+			{
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					mensaje: mensajeNuevo
+				})
+			}
+		);
+
+		const datos = await respuesta.json();
+
+		if (!respuesta.ok || !datos.ok) {
+			throw new Error(
+				datos.error || 'No se pudo enviar el mensaje'
+			);
+		}
+
+		mensajes = [...mensajes, datos.mensaje];
+
+		conversacionSeleccionada = {
+			...conversacionSeleccionada,
+			ultimo_mensaje: mensajeNuevo.trim(),
+			ultima_fecha: new Date().toISOString()
+		};
+
+		conversaciones = conversaciones.map(
+			(conversacion) =>
+				conversacion.id ===
+				conversacionSeleccionada?.id
+					? {
+							...conversacion,
+							ultimo_mensaje: mensajeNuevo.trim(),
+							ultima_fecha: new Date().toISOString()
+						}
+					: conversacion
+		);
+
+		mensajeNuevo = '';
+	} catch (e) {
+		console.error(e);
+
+		error =
+			e instanceof Error
+				? e.message
+				: 'No se pudo enviar el mensaje';
+	} finally {
+		enviandoMensaje = false;
+	}
+}
+
 	async function cargarConversaciones() {
 		try {
 			cargando = true;
@@ -179,6 +249,8 @@
 	}
 
 	cargarConversaciones();
+
+
 </script>
 
 <svelte:head>
@@ -459,16 +531,28 @@
 
 				<div class="composer">
 
-					<input
-						placeholder="Escribir mensaje..."
-						disabled
-					/>
+	<input
+		placeholder="Escribir mensaje..."
+		bind:value={mensajeNuevo}
+		disabled={enviandoMensaje}
+		onkeydown={(e) => {
+			if (e.key === 'Enter') {
+				enviarMensaje();
+			}
+		}}
+	/>
 
-					<button disabled>
-						Enviar
-					</button>
+	<button
+		onclick={enviarMensaje}
+		disabled={
+			enviandoMensaje ||
+			!mensajeNuevo.trim()
+		}
+	>
+		{enviandoMensaje ? 'Enviando...' : 'Enviar'}
+	</button>
 
-				</div>
+</div>
 
 			{/if}
 
