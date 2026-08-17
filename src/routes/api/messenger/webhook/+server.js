@@ -2,18 +2,13 @@ import { json } from '@sveltejs/kit';
 import { supabaseServer } from '$lib/server/supabase';
 import { env } from '$env/dynamic/private';
 
-
 export async function GET({ url }) {
 	const mode = url.searchParams.get('hub.mode');
 	const token = url.searchParams.get('hub.verify_token');
 	const challenge = url.searchParams.get('hub.challenge');
 
 	const verifyToken = env.META_VERIFY_TOKEN;
-console.log('🔐 META_VERIFY_TOKEN existe:', !!verifyToken);
-console.log('🔐 Longitud META_VERIFY_TOKEN:', verifyToken?.length);
-console.log('🔐 Token recibido existe:', !!token);
-console.log('🔐 Longitud token recibido:', token?.length);
-console.log('🔐 Mode:', mode);	
+
 	if (
 		mode === 'subscribe' &&
 		token === verifyToken
@@ -24,15 +19,8 @@ console.log('🔐 Mode:', mode);
 	}
 
 	return new Response('Forbidden', {
-	status: 403,
-	headers: {
-		'x-debug-token-exists': String(!!verifyToken),
-		'x-debug-token-length': String(verifyToken?.length ?? 0),
-		'x-debug-received-exists': String(!!token),
-		'x-debug-received-length': String(token?.length ?? 0),
-		'x-debug-mode': String(mode ?? 'null')
-	}
-});
+		status: 403
+	});
 }
 
 export async function POST({ request }) {
