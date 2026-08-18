@@ -103,14 +103,20 @@ onMount(async () => {
 			return;
 		}
 
-		const subtotal = opcionesValidas.reduce(
-			(total, opcion) => total + Number(opcion.precio),
-			0
-		);
+		const opcionRecomendada = opcionesValidas.find(
+	(opcion) => opcion.recomendada
+);
 
-		const descuento = 0;
-		const total = subtotal - descuento;
+if (!opcionRecomendada) {
+	alert('Marca una opción como recomendada antes de guardar.');
+	return;
+}
 
+const subtotal = Number(opcionRecomendada.precio);
+const descuento = 0;
+const total = subtotal - descuento;
+
+		
 		const slugBase =
 			`${proyecto.titulo}-${cliente.nombre}`
 				.toLowerCase()
@@ -127,6 +133,8 @@ onMount(async () => {
 			.insert({
 				cliente_nombre: cliente.nombre.trim(),
 				cliente_empresa: cliente.empresa.trim() || null,
+				cliente_whatsapp: cliente.whatsapp.trim() || null,
+				cliente_email: cliente.email.trim() || null,
 				titulo: proyecto.titulo.trim(),
 				descripcion: proyecto.descripcion.trim() || null,
 				estado: 'borrador',
