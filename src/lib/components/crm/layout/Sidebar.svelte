@@ -23,6 +23,10 @@
 			ruta: '/crm/cotizaciones'
 		},
 		{
+		    nombre: 'Propuestas',
+		    ruta: '/crm/propuestas'
+		},
+		{
 			nombre: 'Campañas',
 			ruta: '/crm/campanas'
 		},
