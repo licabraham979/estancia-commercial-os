@@ -37,16 +37,22 @@ onMount(async () => {
 		vigencia: '15 días'
 	});
 
-	let opciones = $state([
-		{
-			nombre: '',
-			descripcion: '',
-			precio: '',
-			imagenUrl: '',
-			recomendada: false
-		}
-	]);
-
+	/** @type {{
+	nombre: string;
+	descripcion: string;
+	precio: number | string;
+	imagenUrl: string;
+	recomendada: boolean;
+}[]} */
+let opciones = $state([
+	{
+		nombre: '',
+		descripcion: '',
+		precio: '',
+		imagenUrl: '',
+		recomendada: false
+	}
+]);
 	function agregarImagen() {
 		imagenes.push('');
 	}
@@ -200,7 +206,7 @@ const total = subtotal - descuento;
 
 		alert('¡Cotización guardada correctamente!');
 
-		goto('/crm/cotizaciones');
+		goto('/crm/propuestas');
 
 	} catch (error) {
 		console.error(error);
