@@ -1,12 +1,16 @@
 <script>
-	import { onMount } from 'svelte';
-	import { supabase } from '$lib/supabase/client';
+	let { data } = $props();
 
 	/** @type {any[]} */
-	let cotizaciones = $state([]);
+	let cotizaciones = $state(data?.cotizaciones ?? []);
 
 	/** @type {any[]} */
-	let mercados = $state([]);
+	let mercados = $state(data?.mercados ?? []);
+
+	/** @type {any[]} */
+let configuraciones = $state(
+	data?.configuraciones ?? []
+);
 
 	let cotizacionId = $state('');
 	let mercadoId = $state('');
@@ -31,148 +35,74 @@
 	let empresaWeb = $state('');
 	let empresaDireccion = $state('');
 
-	let cargando = $state(true);
-	let cargandoMercados = $state(true);
+	let cargando = $state(false);
+	
 	let guardando = $state(false);
 	let error = $state('');
 
-	onMount(async () => {
-		await Promise.all([
-			cargarCotizaciones(),
-			cargarMercados()
-		]);
-	});
+	
 
-	async function cargarCotizaciones() {
-		cargando = true;
+	
 
-		const { data, error: errorSupabase } =
-			await supabase
-				.from('cotizaciones')
-				.select(
-					'id, cliente_nombre, cliente_empresa, titulo, total, moneda, created_at'
-				)
-				.order('created_at', {
-					ascending: false
-				});
-
-		if (errorSupabase) {
-			console.error(
-				'Error cargando cotizaciones:',
-				errorSupabase
-			);
-
-			error =
-				'No se pudieron cargar las cotizaciones.';
-
-			cargando = false;
-			return;
-		}
-
-		cotizaciones = data ?? [];
-		cargando = false;
-	}
-
-	async function cargarMercados() {
-		cargandoMercados = true;
-
-		const { data, error: errorSupabase } =
-			await supabase
-				.from('mercados')
-				.select(
-					'id, nombre, codigo_pais, moneda, bandera, activo'
-				)
-				.eq('activo', true)
-				.order('nombre', {
-					ascending: true
-				});
-
-		if (errorSupabase) {
-			console.error(
-				'Error cargando mercados:',
-				errorSupabase
-			);
-
-			error =
-				'No se pudieron cargar los mercados.';
-
-			cargandoMercados = false;
-			return;
-		}
-
-		mercados = data ?? [];
-		cargandoMercados = false;
-	}
+	
 
 	/** @param {string} id */
-	async function seleccionarMercado(id) {
-		mercadoId = id;
+function seleccionarMercado(id) {
+	mercadoId = id;
 
-		if (!id) {
-			empresaNombre = '';
-			empresaTelefono = '';
-			empresaEmail = '';
-			empresaWeb = '';
-			empresaDireccion = '';
-			return;
-		}
+	if (!id) {
+		empresaNombre = '';
+		empresaTelefono = '';
+		empresaEmail = '';
+		empresaWeb = '';
+		empresaDireccion = '';
+		return;
+	}
 
 	const mercado = mercados.find(
-	(item) => item.id === id
-);
-
-console.log('MERCADO SELECCIONADO:', mercado);
-console.log('MERCADO ID:', id);
-
-/*
- * El mercado propone una moneda inicial,
- * pero NO obliga la moneda del pago.
- */
-if (mercado?.moneda) {
-	moneda = mercado.moneda;
-}
-
-const {
-	data: configuracion,
-	error: errorSupabase
-} = await supabase
-	.from('mercado_configuracion')
-	.select(
-		'nombre_comercial, telefono, whatsapp, email, sitio_web, direccion'
-	)
-	.eq('mercado_id', id)
-	.maybeSingle();
-
-console.log('CONFIGURACION RECIBIDA:', configuracion);
-
-if (errorSupabase) {
-	console.error(
-		'Error cargando configuración del mercado:',
-		errorSupabase
+		(item) => item.id === id
 	);
 
-	error =
-		'No se pudo cargar la configuración comercial.';
+	console.log(
+		'MERCADO SELECCIONADO:',
+		mercado
+	);
 
-	return;
-}
-		empresaNombre =
-			configuracion?.nombre_comercial ?? '';
-
-		empresaTelefono =
-			configuracion?.whatsapp ??
-			configuracion?.telefono ??
-			'';
-
-		empresaEmail =
-			configuracion?.email ?? '';
-
-		empresaWeb =
-			configuracion?.sitio_web ?? '';
-
-		empresaDireccion =
-			configuracion?.direccion ?? '';
+	/*
+	 * El mercado propone una moneda inicial,
+	 * pero NO obliga la moneda del pago.
+	 */
+	if (mercado?.moneda) {
+		moneda = mercado.moneda;
 	}
+
+	const configuracion =
+		configuraciones.find(
+			(item) => item.mercado_id === id
+		);
+
+	console.log(
+		'CONFIGURACION RECIBIDA:',
+		configuracion
+	);
+
+	empresaNombre =
+		configuracion?.nombre_comercial ?? '';
+
+	empresaTelefono =
+		configuracion?.whatsapp ??
+		configuracion?.telefono ??
+		'';
+
+	empresaEmail =
+		configuracion?.email ?? '';
+
+	empresaWeb =
+		configuracion?.sitio_web ?? '';
+
+	empresaDireccion =
+		configuracion?.direccion ?? '';
+}
 
 	function seleccionarCotizacion() {
 		const cotizacion = cotizaciones.find(
@@ -472,8 +402,7 @@ if (errorSupabase) {
 			País / mercado
 		</label>
 
-		{#if cargandoMercados}
-
+		{#if mercados.length === 0}
 			<div class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
 				Cargando mercados...
 			</div>

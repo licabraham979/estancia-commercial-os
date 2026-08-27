@@ -1,281 +1,84 @@
 <script>
-	import { onMount } from 'svelte';
-	import { supabase } from '$lib/supabase/client';
+	let { data } = $props();
 
-	/** @type {any[]} */
-	let cotizaciones = $state([]);
+	let recibos = $derived(data?.recibos ?? []);
+	let error = $derived(data?.error ?? '');
 
-	/** @type {any[]} */
-	let mercados = $state([]);
-
-	let cotizacionId = $state('');
-	let mercadoId = $state('');
-    
-
-	let clienteNombre = $state('');
-	let clienteEmpresa = $state('');
-
-	let concepto = $state('');
-	let monto = $state('');
-	let moneda = $state('HNL');
-	let metodoPago = $state('');
-	let referencia = $state('');
-	let observaciones = $state('');
-
-	let empresaNombre = $state('');
-	let empresaTelefono = $state('');
-	let empresaEmail = $state('');
-	let empresaWeb = $state('');
-	let empresaDireccion = $state('');
-
-	let cargando = $state(true);
-	let cargandoMercados = $state(true);
-	let guardando = $state(false);
-	let error = $state('');
-
-	onMount(async () => {
-		await Promise.all([
-			cargarCotizaciones(),
-			cargarMercados()
-		]);
-	});
-
-	async function cargarCotizaciones() {
-		error = '';
-
-		const { data, error: errorSupabase } = await supabase
-			.from('cotizaciones')
-			.select(
-				'id, cliente_nombre, cliente_empresa, titulo, total, moneda, created_at'
-			)
-			.order('created_at', { ascending: false });
-
-		if (errorSupabase) {
-			console.error('Error cargando cotizaciones:', errorSupabase);
-			error = 'No se pudieron cargar las cotizaciones.';
-			cargando = false;
-			return;
-		}
-
-		cotizaciones = data ?? [];
-		cargando = false;
+	function nuevoRecibo() {
+		window.location.href = '/crm/recibos/nuevo';
 	}
 
-	async function cargarMercados() {
-		cargandoMercados = true;
-
-		const { data, error: errorSupabase } = await supabase
-			.from('mercados')
-			.select('id, nombre, codigo_pais, moneda, bandera, activo')
-			.eq('activo', true)
-			.order('nombre', { ascending: true });
-
-		if (errorSupabase) {
-			console.error('Error cargando mercados:', errorSupabase);
-			error = 'No se pudieron cargar los mercados.';
-			cargandoMercados = false;
-			return;
-		}
-
-		mercados = data ?? [];
-		cargandoMercados = false;
-	}
-/** @param {string} id */
-async function seleccionarMercado(id) {
-		mercadoId = id;
-
-		if (!id) {
-			empresaNombre = '';
-			empresaTelefono = '';
-			empresaEmail = '';
-			empresaWeb = '';
-			empresaDireccion = '';
-			return;
-		}
-
-		const mercado = mercados.find((item) => item.id === id);
-
-		if (mercado?.moneda) {
-			moneda = mercado.moneda;
-		}
-
-		const { data: configuracion, error: errorSupabase } =
-			await supabase
-				.from('mercado_configuracion')
-				.select(
-					'nombre_comercial, telefono, whatsapp, email, sitio_web, direccion'
-				)
-				.eq('mercado_id', id)
-				.maybeSingle();
-
-		if (errorSupabase) {
-			console.error(
-				'Error cargando configuración del mercado:',
-				errorSupabase
-			);
-
-			error = 'No se pudo cargar la configuración comercial.';
-			return;
-		}
-
-		empresaNombre = configuracion?.nombre_comercial ?? '';
-		empresaTelefono =
-			configuracion?.whatsapp ??
-			configuracion?.telefono ??
-			'';
-		empresaEmail = configuracion?.email ?? '';
-		empresaWeb = configuracion?.sitio_web ?? '';
-		empresaDireccion = configuracion?.direccion ?? '';
+	/** @param {string} id */
+	function verRecibo(id) {
+		window.location.href = `/crm/recibos/${id}`;
 	}
 
-	function seleccionarCotizacion() {
-		const cotizacion = cotizaciones.find(
-			(item) => item.id === cotizacionId
-		);
-
-		if (!cotizacion) {
-			clienteNombre = '';
-			clienteEmpresa = '';
-			return;
-		}
-
-		clienteNombre = cotizacion.cliente_nombre ?? '';
-		clienteEmpresa = cotizacion.cliente_empresa ?? '';
-
-		if (cotizacion.moneda) {
-			moneda = cotizacion.moneda;
-		}
-
-		if (!concepto) {
-			concepto = `Pago correspondiente a ${cotizacion.titulo}`;
-		}
+	/** @param {number|string|null|undefined} monto
+	 * @param {string|null|undefined} moneda
+	 */
+	function formatearMonto(monto, moneda) {
+		return new Intl.NumberFormat('es-HN', {
+			minimumFractionDigits: 2,
+			maximumFractionDigits: 2
+		}).format(Number(monto ?? 0)) + ` ${moneda ?? ''}`;
 	}
 
-	function volver() {
-		window.location.href = '/crm/recibos';
-	}
+	/** @param {string|null|undefined} fecha */
+	function formatearFecha(fecha) {
+		if (!fecha) return '—';
 
-	async function guardarRecibo() {
-		if (guardando) return;
-
-		error = '';
-
-		if (!cotizacionId) {
-			error = 'Selecciona una cotización.';
-			return;
-		}
-
-		if (!mercadoId) {
-			error = 'Selecciona el mercado que emitirá el recibo.';
-			return;
-		}
-
-		if (!clienteNombre.trim()) {
-			error = 'El cliente es obligatorio.';
-			return;
-		}
-
-		if (!concepto.trim()) {
-			error = 'El concepto es obligatorio.';
-			return;
-		}
-
-		const montoNumerico = Number(monto);
-
-		if (!Number.isFinite(montoNumerico) || montoNumerico <= 0) {
-			error = 'Ingresa un monto válido mayor a cero.';
-			return;
-		}
-
-		guardando = true;
-
-		const respuesta = await fetch('/api/recibos', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				cotizacion_id: cotizacionId,
-				mercado_id: mercadoId,
-
-				cliente_nombre: clienteNombre.trim(),
-				cliente_empresa: clienteEmpresa.trim() || null,
-
-				concepto: concepto.trim(),
-				monto: montoNumerico,
-				moneda,
-
-				metodo_pago: metodoPago || null,
-				referencia: referencia.trim() || null,
-				observaciones: observaciones.trim() || null,
-
-				empresa_nombre: empresaNombre.trim() || null,
-				empresa_telefono: empresaTelefono.trim() || null,
-				empresa_email: empresaEmail.trim() || null,
-				empresa_web: empresaWeb.trim() || null,
-				empresa_direccion: empresaDireccion.trim() || null
-			})
-		});
-
-		const resultado = await respuesta.json();
-
-		if (!respuesta.ok) {
-			console.error('Error creando recibo:', resultado);
-
-			error = `No se pudo crear el recibo: ${
-				resultado.error ?? 'Error desconocido'
-			}`;
-
-			guardando = false;
-			return;
-		}
-
-		window.location.href = `/crm/recibos/${resultado.id}`;
+		return new Intl.DateTimeFormat('es-HN', {
+			day: '2-digit',
+			month: '2-digit',
+			year: 'numeric'
+		}).format(new Date(fecha));
 	}
 </script>
 
 <svelte:head>
-	<title>Nuevo recibo | Estancia Comercial</title>
+	<title>Recibos | Estancia Comercial</title>
 </svelte:head>
 
 <div class="min-h-screen bg-slate-50 p-6 lg:p-8">
 
-	<div class="mx-auto max-w-4xl">
+	<div class="mx-auto max-w-7xl">
 
 		<!-- ENCABEZADO -->
 
-		<div class="mb-8 flex items-center justify-between gap-4">
+		<div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
 			<div>
 				<p class="text-sm font-bold uppercase tracking-widest text-cyan-600">
-					Recibos
+					Administración
 				</p>
 
 				<h1 class="mt-1 text-3xl font-black text-slate-900">
-					Nuevo recibo
+					Recibos
 				</h1>
 
 				<p class="mt-2 text-slate-500">
-					Registra un pago recibido de un cliente.
+					Consulta y administra los pagos recibidos de tus clientes.
 				</p>
 			</div>
 
 			<button
 				type="button"
-				onclick={volver}
-				class="rounded-xl border border-slate-300 bg-white px-5 py-3 font-bold text-slate-700 transition hover:bg-slate-50"
+				onclick={nuevoRecibo}
+				class="rounded-xl bg-slate-900 px-5 py-3 font-bold text-white transition hover:bg-slate-800"
 			>
-				Cancelar
+				+ Crear recibo
 			</button>
 
 		</div>
+
+		<!-- ERROR -->
 
 		{#if error}
 
 			<div class="mb-6 rounded-2xl border border-red-200 bg-red-50 p-5">
 
 				<div class="font-black text-red-800">
-					No se pudo guardar
+					No se pudieron cargar los recibos
 				</div>
 
 				<div class="mt-1 text-sm text-red-600">
@@ -286,486 +89,209 @@ async function seleccionarMercado(id) {
 
 		{/if}
 
-		<div class="space-y-6">
-
-			<!-- ORIGEN -->
-
-			<section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-
-				<div class="flex items-start gap-4">
-
-					<div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-xl">
-						🧾
-					</div>
-
-					<div>
-						<h2 class="text-lg font-black text-slate-900">
-							Origen del pago
-						</h2>
-
-						<p class="mt-1 text-sm text-slate-500">
-							Relaciona el recibo con una cotización existente.
-						</p>
-					</div>
-
-				</div>
-
-				<div class="mt-5">
-
-					<label class="mb-2 block text-sm font-bold text-slate-700">
-						Cotización
-					</label>
-
-					{#if cargando}
-
-						<div class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
-							Cargando cotizaciones...
-						</div>
-
-					{:else}
-
-						<select
-							bind:value={cotizacionId}
-							onchange={seleccionarCotizacion}
-							class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100"
-						>
-
-							<option value="">
-								Seleccionar cotización
-							</option>
-
-							{#each cotizaciones as cotizacion}
-
-								<option value={cotizacion.id}>
-									{cotizacion.titulo} — {cotizacion.cliente_nombre} — {cotizacion.moneda ?? 'HNL'} {cotizacion.total}
-								</option>
-
-							{/each}
-
-						</select>
-
-					{/if}
-
-				</div>
-
-			</section>
-
-
-			<!-- MERCADO -->
-
-			<section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-
-				<div class="flex items-start gap-4">
-
-					<div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-cyan-50 text-xl">
-						🌎
-					</div>
-
-					<div>
-						<h2 class="text-lg font-black text-slate-900">
-							Mercado emisor
-						</h2>
-
-						<p class="mt-1 text-sm text-slate-500">
-							Selecciona el país desde el cual se emitirá este recibo.
-						</p>
-					</div>
-
-				</div>
-
-				<div class="mt-5">
-
-					<label class="mb-2 block text-sm font-bold text-slate-700">
-						Mercado
-					</label>
-
-					{#if cargandoMercados}
-
-						<div class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
-							Cargando mercados...
-						</div>
-
-					{:else}
-
-						<select
-							value={mercadoId}
-							onchange={(event) =>
-								seleccionarMercado(event.currentTarget.value)}
-							class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100"
-						>
-
-							<option value="">
-								Seleccionar mercado
-							</option>
-
-							{#each mercados as mercado}
-
-								<option value={mercado.id}>
-									{mercado.bandera ?? ''} {mercado.nombre} — {mercado.codigo_pais}
-								</option>
-
-							{/each}
-
-						</select>
-
-					{/if}
-
-				</div>
-
-			</section>
-
-
-			<!-- CLIENTE -->
-
-			<section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-
-				<h2 class="text-lg font-black text-slate-900">
-					Cliente
-				</h2>
-
-				<div class="mt-5 grid gap-5 md:grid-cols-2">
-
-					<div>
-
-						<label class="mb-2 block text-sm font-bold text-slate-700">
-							Nombre
-						</label>
-
-						<input
-							type="text"
-							bind:value={clienteNombre}
-							readonly
-							class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-700"
-						/>
-
-					</div>
-
-					<div>
-
-						<label class="mb-2 block text-sm font-bold text-slate-700">
-							Empresa
-						</label>
-
-						<input
-							type="text"
-							bind:value={clienteEmpresa}
-							readonly
-							placeholder="Sin empresa"
-							class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-700"
-						/>
-
-					</div>
-
-				</div>
-
-			</section>
-
-
-			<!-- DATOS COMERCIALES -->
-
-			<section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-
-				<div class="flex items-start justify-between gap-4">
-
-					<div class="flex items-start gap-4">
-
-						<div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-xl">
-							⚙️
-						</div>
-
-						<div>
-							<h2 class="text-lg font-black text-slate-900">
-								Datos comerciales del recibo
-							</h2>
-
-							<p class="mt-1 text-sm text-slate-500">
-								Se cargan automáticamente desde la configuración del mercado.
-								Puedes modificarlos únicamente para este recibo.
-							</p>
-						</div>
-
-					</div>
-
-				</div>
-
-				<div class="mt-5 rounded-xl border border-cyan-100 bg-cyan-50 p-4 text-sm text-cyan-800">
-
-					<strong>Importante:</strong>
-					los datos que aparecen aquí quedan guardados dentro del recibo.
-					Si posteriormente cambias la configuración del mercado,
-					los recibos anteriores no serán modificados.
-
-				</div>
-
-				<div class="mt-5 grid gap-5 md:grid-cols-2">
-
-					<div>
-
-						<label class="mb-2 block text-sm font-bold text-slate-700">
-							Nombre comercial
-						</label>
-
-						<input
-							type="text"
-							bind:value={empresaNombre}
-							placeholder="Estancia Comercial"
-							class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100"
-						/>
-
-					</div>
-
-					<div>
-
-						<label class="mb-2 block text-sm font-bold text-slate-700">
-							Teléfono / WhatsApp
-						</label>
-
-						<input
-							type="text"
-							bind:value={empresaTelefono}
-							placeholder="3338-8386"
-							class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100"
-						/>
-
-					</div>
-
-					<div>
-
-						<label class="mb-2 block text-sm font-bold text-slate-700">
-							Correo
-						</label>
-
-						<input
-							type="email"
-							bind:value={empresaEmail}
-							placeholder="correo@empresa.com"
-							class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100"
-						/>
-
-					</div>
-
-					<div>
-
-						<label class="mb-2 block text-sm font-bold text-slate-700">
-							Sitio web
-						</label>
-
-						<input
-							type="text"
-							bind:value={empresaWeb}
-							placeholder="https://..."
-							class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100"
-						/>
-
-					</div>
-
-				</div>
-
-				<div class="mt-5">
-
-					<label class="mb-2 block text-sm font-bold text-slate-700">
-						Dirección
-					</label>
-
-					<input
-						type="text"
-						bind:value={empresaDireccion}
-						placeholder="Dirección comercial"
-						class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100"
-					/>
-
-				</div>
-
-			</section>
-
-
-			<!-- PAGO -->
-
-			<section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-
-				<h2 class="text-lg font-black text-slate-900">
-					Información del pago
-				</h2>
-
-				<div class="mt-5 space-y-5">
-
-					<div>
-
-						<label class="mb-2 block text-sm font-bold text-slate-700">
-							Concepto
-						</label>
-
-						<input
-							type="text"
-							bind:value={concepto}
-							placeholder="Ej. Anticipo para fabricación de rótulo"
-							class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100"
-						/>
-
-					</div>
-
-					<div class="grid gap-5 md:grid-cols-2">
-
-						<div>
-
-							<label class="mb-2 block text-sm font-bold text-slate-700">
-								Monto recibido
-							</label>
-
-							<input
-								type="number"
-								min="0.01"
-								step="0.01"
-								bind:value={monto}
-								placeholder="0.00"
-								class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100"
-							/>
-
-						</div>
-
-						<div>
-
-							<label class="mb-2 block text-sm font-bold text-slate-700">
-								Moneda
-							</label>
-
-							<select
-								bind:value={moneda}
-								class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100"
-							>
-
-								<option value="HNL">
-									HNL — Lempiras
-								</option>
-
-								<option value="MXN">
-									MXN — Pesos mexicanos
-								</option>
-
-								<option value="BRL">
-									BRL — Reales brasileños
-								</option>
-
-								<option value="USD">
-									USD — Dólares
-								</option>
-
-							</select>
-
-						</div>
-
-					</div>
-
-					<div class="grid gap-5 md:grid-cols-2">
-
-						<div>
-
-							<label class="mb-2 block text-sm font-bold text-slate-700">
-								Método de pago
-							</label>
-
-							<select
-								bind:value={metodoPago}
-								class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100"
-							>
-
-								<option value="">
-									Seleccionar método
-								</option>
-
-								<option value="efectivo">
-									Efectivo
-								</option>
-
-								<option value="transferencia">
-									Transferencia bancaria
-								</option>
-
-								<option value="deposito">
-									Depósito bancario
-								</option>
-
-								<option value="tarjeta">
-									Tarjeta
-								</option>
-
-								<option value="paypal">
-									PayPal
-								</option>
-
-								<option value="binance">
-									Binance / Cripto
-								</option>
-
-								<option value="stripe">
-									Stripe
-								</option>
-
-								<option value="otro">
-									Otro
-								</option>
-
-							</select>
-
-						</div>
-
-						<div>
-
-							<label class="mb-2 block text-sm font-bold text-slate-700">
-								Referencia
-							</label>
-
-							<input
-								type="text"
-								bind:value={referencia}
-								placeholder="No. de transferencia, depósito, operación, etc."
-								class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100"
-							/>
-
-						</div>
-
-					</div>
-
-					<div>
-
-						<label class="mb-2 block text-sm font-bold text-slate-700">
-							Observaciones
-						</label>
-
-						<textarea
-							bind:value={observaciones}
-							rows="4"
-							placeholder="Información adicional sobre el pago..."
-							class="w-full resize-none rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100"
-						></textarea>
-
-					</div>
-
-				</div>
-
-			</section>
-
-
-			<!-- ACCIONES -->
-
-			<div class="flex justify-end">
-
-				<button
-					type="button"
-					onclick={guardarRecibo}
-					disabled={guardando || cargando || cargandoMercados}
-					class="rounded-xl bg-slate-900 px-6 py-3 font-bold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
-				>
-
-					{guardando
-						? 'Emitiendo recibo...'
-						: '✓ Emitir recibo'}
-
-				</button>
-
+		<!-- RESUMEN -->
+
+		<div class="mb-6 grid gap-4 sm:grid-cols-3">
+
+			<div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+				<p class="text-sm font-bold text-slate-500">
+					Recibos emitidos
+				</p>
+
+				<p class="mt-2 text-3xl font-black text-slate-900">
+					{recibos.length}
+				</p>
+			</div>
+
+			<div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+				<p class="text-sm font-bold text-slate-500">
+					Recibos HNL
+				</p>
+
+				<p class="mt-2 text-3xl font-black text-slate-900">
+					{recibos.filter((r) => r.moneda === 'HNL').length}
+				</p>
+			</div>
+
+			<div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+				<p class="text-sm font-bold text-slate-500">
+					Último recibo
+				</p>
+
+				<p class="mt-2 text-lg font-black text-slate-900">
+					{recibos.length
+						? formatearFecha(recibos[0].fecha_pago)
+						: '—'}
+				</p>
 			</div>
 
 		</div>
+
+		<!-- LISTADO -->
+
+		<section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+
+			<div class="border-b border-slate-200 px-6 py-5">
+
+				<h2 class="text-lg font-black text-slate-900">
+					Historial de recibos
+				</h2>
+
+				<p class="mt-1 text-sm text-slate-500">
+					Selecciona un recibo para consultar su detalle.
+				</p>
+
+			</div>
+
+			{#if recibos.length === 0}
+
+				<div class="px-6 py-16 text-center">
+
+					<div class="text-5xl">
+						🧾
+					</div>
+
+					<h3 class="mt-4 text-lg font-black text-slate-900">
+						Aún no hay recibos
+					</h3>
+
+					<p class="mx-auto mt-2 max-w-md text-sm text-slate-500">
+						Cuando registres un pago, aparecerá aquí su historial.
+					</p>
+
+					<button
+						type="button"
+						onclick={nuevoRecibo}
+						class="mt-6 rounded-xl bg-slate-900 px-5 py-3 font-bold text-white hover:bg-slate-800"
+					>
+						Crear primer recibo
+					</button>
+
+				</div>
+
+			{:else}
+
+				<div class="overflow-x-auto">
+
+					<table class="w-full min-w-[900px]">
+
+						<thead class="bg-slate-50">
+
+							<tr class="border-b border-slate-200 text-left">
+
+								<th class="px-6 py-4 text-xs font-black uppercase tracking-wider text-slate-500">
+									Folio
+								</th>
+
+								<th class="px-6 py-4 text-xs font-black uppercase tracking-wider text-slate-500">
+									Cliente
+								</th>
+
+								<th class="px-6 py-4 text-xs font-black uppercase tracking-wider text-slate-500">
+									Fecha
+								</th>
+
+								<th class="px-6 py-4 text-xs font-black uppercase tracking-wider text-slate-500">
+									Concepto
+								</th>
+
+								<th class="px-6 py-4 text-right text-xs font-black uppercase tracking-wider text-slate-500">
+									Monto
+								</th>
+
+								<th class="px-6 py-4 text-xs font-black uppercase tracking-wider text-slate-500">
+									Método
+								</th>
+
+								<th class="px-6 py-4 text-xs font-black uppercase tracking-wider text-slate-500">
+									Estado
+								</th>
+
+								<th class="px-6 py-4"></th>
+
+							</tr>
+
+						</thead>
+
+						<tbody>
+
+							{#each recibos as recibo}
+
+								<tr class="border-b border-slate-100 last:border-0 hover:bg-slate-50">
+
+									<td class="px-6 py-5">
+
+										<span class="font-black text-slate-900">
+											{recibo.folio ?? '—'}
+										</span>
+
+									</td>
+
+									<td class="px-6 py-5">
+
+										<div class="font-bold text-slate-900">
+											{recibo.cliente_nombre ?? '—'}
+										</div>
+
+										{#if recibo.cliente_empresa}
+
+											<div class="mt-1 text-sm text-slate-500">
+												{recibo.cliente_empresa}
+											</div>
+
+										{/if}
+
+									</td>
+
+									<td class="px-6 py-5 text-sm text-slate-600">
+										{formatearFecha(recibo.fecha_pago)}
+									</td>
+
+									<td class="max-w-xs px-6 py-5 text-sm text-slate-600">
+										{recibo.concepto ?? '—'}
+									</td>
+
+									<td class="px-6 py-5 text-right font-black text-slate-900">
+										{formatearMonto(recibo.monto, recibo.moneda)}
+									</td>
+
+									<td class="px-6 py-5 text-sm text-slate-600">
+										{recibo.metodo_pago ?? '—'}
+									</td>
+
+									<td class="px-6 py-5">
+
+										<span class="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">
+											{recibo.estado ?? '—'}
+										</span>
+
+									</td>
+
+									<td class="px-6 py-5 text-right">
+
+										<button
+											type="button"
+											onclick={() => verRecibo(recibo.id)}
+											class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-100"
+										>
+											Ver
+										</button>
+
+									</td>
+
+								</tr>
+
+							{/each}
+
+						</tbody>
+
+					</table>
+
+				</div>
+
+			{/if}
+
+		</section>
 
 	</div>
 
