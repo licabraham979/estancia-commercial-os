@@ -214,21 +214,7 @@ const metodoPagoNombre = (metodo) => {
 
 					</div>
 
-					{#if cotizacion.descripcion}
-
-						<div class="field">
-
-							<span class="lbl">
-								Descripción
-							</span>
-
-							<span class="val">
-								{cotizacion.descripcion}
-							</span>
-
-						</div>
-
-					{/if}
+					
 
 					<div class="field">
 

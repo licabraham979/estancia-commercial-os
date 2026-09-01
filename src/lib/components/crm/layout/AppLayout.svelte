@@ -5,10 +5,10 @@
 	import MainContent from './MainContent.svelte';
 </script>
 
-<div class="app">
+<div class="app print-layout">
 	<Sidebar />
 
-	<div class="content">
+	<div class="content print-content">
 		<Topbar />
 
 		<Breadcrumb />
@@ -30,5 +30,23 @@
 		display: flex;
 		flex-direction: column;
 		padding: 20px;
+	}
+		@media print {
+
+		.print-layout {
+			display: block !important;
+			min-height: auto !important;
+		}
+
+		.print-layout > :global(*) {
+			display: none !important;
+		}
+
+		.print-layout > .print-content {
+			display: block !important;
+			padding: 0 !important;
+			margin: 0 !important;
+			width: 100% !important;
+		}
 	}
 </style>
