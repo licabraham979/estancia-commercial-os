@@ -115,12 +115,14 @@ export async function load({ params, setHeaders }) {
 			expira_at: enlace.expira_at
 		},
 		cotizacion: {
-			id: cotizacion.id,
-			titulo: cotizacion.titulo,
-			cliente_nombre: cotizacion.cliente_nombre,
-			total: cotizacion.total,
-			moneda: cotizacion.moneda
-		},
+	id: cotizacion.id,
+	titulo: cotizacion.titulo,
+	cliente_nombre: cotizacion.cliente_nombre,
+	total: cotizacion.total,
+	anticipo: Number(cotizacion.total ?? 0) * 0.5,
+	porcentaje_anticipo: 50,
+	moneda: cotizacion.moneda
+},
 		cuentas: cuentas ?? []
 	};
 }

@@ -137,19 +137,32 @@
 
 			<div class="mt-5 border-t border-slate-100 pt-5">
 
-				<div class="flex items-end justify-between gap-4">
+				<div class="rounded-2xl bg-slate-50 p-5">
 
-					<div>
-						<div class="text-xs font-bold uppercase tracking-wider text-slate-400">
-							Importe de referencia
-						</div>
-					</div>
+	<div class="text-xs font-black uppercase tracking-widest text-slate-400">
+		Anticipo para iniciar el proyecto
+	</div>
 
-					<div class="text-3xl font-black text-slate-900">
-						{formatoMoneda(cotizacion.total)}
-					</div>
+	<div class="mt-2 flex items-end justify-between gap-4">
+		<div>
+			<div class="text-sm font-bold text-slate-500">
+				{cotizacion.porcentaje_anticipo}% de anticipo
+			</div>
+		</div>
 
-				</div>
+		<div class="text-3xl font-black text-slate-900">
+			{formatoMoneda(cotizacion.anticipo)}
+		</div>
+	</div>
+
+	<div class="mt-4 border-t border-slate-200 pt-3 text-sm text-slate-500">
+		<span>Inversión total del proyecto:</span>
+		<span class="font-bold text-slate-700">
+			{formatoMoneda(cotizacion.total)}
+		</span>
+	</div>
+
+</div>
 
 			</div>
 
