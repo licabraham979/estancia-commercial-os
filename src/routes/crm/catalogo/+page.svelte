@@ -1,369 +1,428 @@
 <script>
-	/** @typedef {import('$lib/types/catalogo').Material} Material */
-
-
-	import { materialesStore } from '$lib/stores/catalogo/materiales.svelte.js';
-	import { serviciosStore } from '$lib/stores/catalogo/servicios.svelte.js';
-
-
 	import Toolbar from '$lib/components/crm/ui/Toolbar.svelte';
 	import Card from '$lib/components/crm/ui/Card.svelte';
-	import Modal from '$lib/components/crm/ui/Modal.svelte';
+	import ArticuloForm from '$lib/components/crm/catalogo/ArticuloForm.svelte';
+	import { supabase } from '$lib/supabase/client';
 
+let mostrarFormularioArticulo = $state(false);
+/** @type {any} */
+let articuloSeleccionado = $state(null);
 
-	import MaterialForm from '$lib/components/crm/catalogo/MaterialForm.svelte';
-	import ServicioForm from '$lib/components/crm/catalogo/ServicioForm.svelte';
-	import CatalogCard from '$lib/components/crm/catalogo/CatalogCard.svelte';
-	import CatalogDetail from '$lib/components/crm/catalogo/CatalogDetail.svelte';
-	import CotizadorModal from '$lib/components/crm/cotizaciones/CotizadorModal.svelte';
+function nuevoArticulo() {
+	articuloSeleccionado = null;
+	mostrarFormularioArticulo = true;
+}
 
-
-let mostrarModalServicio = $state(false);
-
-
-
-let servicioSeleccionado = $state(null);
-
+function cerrarFormularioArticulo() {
+	mostrarFormularioArticulo = false;
+	articuloSeleccionado = null;
+}
 /**
- * @param {any} servicio
+ * @param {any} articulo
  */
-function editarServicio(servicio){
+async function desactivarArticulo(articulo) {
+	const confirmar = confirm(
+		`¿Desactivar "${articulo.nombre}"?\n\nEl artículo dejará de aparecer en el catálogo activo, pero no se eliminará del sistema.`
+	);
 
-	servicioSeleccionado = servicio;
+	if (!confirmar) return;
 
-	mostrarModalServicio = true;
+	const { error } = await supabase
+		.from('catalogo_articulos')
+		.update({ activo: false })
+		.eq('id', articulo.id);
 
+	if (error) {
+		console.error(error);
+		alert('No fue posible desactivar el artículo.');
+		return;
+	}
+
+	location.reload();
 }
 
+	let { data } = $props();
 
+	let pestaña = $state('articulos');
+	let busqueda = $state('');
+	let categoriaSeleccionada = $state('todas');
 
-function cerrarModalServicio(){
+	let articulos = $derived(data.articulos ?? []);
+	let categorias = $derived(data.categorias ?? []);
+	
+	let articulosFiltrados = $derived(
+		articulos.filter((articulo) => {
+			const coincideBusqueda =
+				!busqueda.trim() ||
+				articulo.nombre
+					.toLowerCase()
+					.includes(busqueda.toLowerCase()) ||
+				(articulo.descripcion ?? '')
+					.toLowerCase()
+					.includes(busqueda.toLowerCase());
 
-	mostrarModalServicio = false;
+			const coincideCategoria =
+				categoriaSeleccionada === 'todas' ||
+				articulo.categoria_id === categoriaSeleccionada;
 
-	servicioSeleccionado = null;
-
-}
-
-
-
-	let pestaña = $state('materiales');
-
-	let mostrarModal = $state(false);
-
-
-	/** @type {Material|null} */
-	let materialSeleccionado = $state(null);
-
-
+			return coincideBusqueda && coincideCategoria;
+		})
+	);
 
 	/**
-	 * @param {Material} material
-	 */
-	function editarMaterial(material){
-
-		materialSeleccionado = material;
-
-		mostrarModal = true;
-
-	}
+ * @param {any} articulo
+ */
+function nombreCategoria(articulo) {
+	return articulo.categoria?.nombre ?? 'Sin categoría';
+}
 
 
+/**
+ * @param {any} variante
+ */
+function resumenVariante(variante) {
+	const medidas =
+		variante.ancho && variante.alto
+			? `${variante.ancho} × ${variante.alto} ${variante.unidad_medida ?? ''}`
+			: '';
 
-	function cerrarModal(){
+	return [variante.nombre, medidas]
+		.filter(Boolean)
+		.join(' · ');
+}
 
-		mostrarModal = false;
-
-		materialSeleccionado = null;
-
-	}
-
-	let servicioDetalle = $state(null);
-
-	let servicioParaCotizar = $state(null);
 
 </script>
 
-<div class="p-6">
+<div class="p-6 space-y-6">
 
-	<Toolbar
+<Toolbar
 	titulo="Catálogo Maestro"
-	descripcion="Gestión de materiales y servicios comerciales"
-	botonTexto="Nuevo Material"
-	onNuevo={() => {
-
-	materialSeleccionado = null;
-
-	mostrarModal = true;
-
-}}
+	descripcion="Materiales, servicios, mano de obra, herramientas y proveedores"
+	botonTexto="Nuevo artículo"
+	onNuevo={nuevoArticulo}
 />
 
+<div class="flex flex-wrap gap-3">
 
-	<div class="flex gap-3 mb-6">
+	<button
+		class="btn"
+		class:btn-primary={pestaña === 'articulos'}
+		onclick={() => pestaña = 'articulos'}
+	>
+		Artículos
+	</button>
 
-		<button
-			class="btn"
-			class:btn-primary={pestaña === 'materiales'}
-			onclick={() => pestaña = 'materiales'}
-		>
-			Materiales
-		</button>
+	<button
+		class="btn"
+		class:btn-primary={pestaña === 'proveedores'}
+		onclick={() => pestaña = 'proveedores'}
+	>
+		Proveedores
+	</button>
 
+	<button
+		class="btn"
+		class:btn-primary={pestaña === 'plantillas'}
+		onclick={() => pestaña = 'plantillas'}
+	>
+		Plantillas
+	</button>
 
-		<button
-			class="btn"
-			class:btn-primary={pestaña === 'servicios'}
-			onclick={() => pestaña = 'servicios'}
-		>
-			Servicios
-		</button>
+</div>
 
-		<button
-	class="btn"
-	class:btn-primary={pestaña === 'presentacion'}
-	onclick={() => pestaña = 'presentacion'}
->
-	Presentación
-</button>
+{#if pestaña === 'articulos'}
 
-		<button
-	class="btn btn-primary"
-	onclick={() => {
+	<Card>
 
-		servicioSeleccionado = null;
+		<div class="p-5 space-y-5">
 
-		mostrarModalServicio = true;
+			<div class="flex flex-col lg:flex-row gap-3">
 
-	}}
->
-	Nuevo Servicio
-</button>
+				<input
+					class="input input-bordered flex-1"
+					placeholder="Buscar artículo..."
+					bind:value={busqueda}
+				/>
 
-	</div>
+				<select
+					class="select select-bordered"
+					bind:value={categoriaSeleccionada}
+				>
+					<option value="todas">
+						Todas las categorías
+					</option>
 
+					{#each categorias as categoria}
 
-
-	{#if pestaña === 'materiales'}
-
-		<h2 class="text-xl font-semibold mb-4">
-			Materiales
-		</h2>
-
-
-		<div class="overflow-x-auto">
-
-			<Card>
-	
-
-			<table class="table">
-
-				<thead>
-					<tr>
-						<th>Material</th>
-						<th>Categoría</th>
-						<th>Unidad</th>
-						<th>Costo</th>
-						<th>Acciones</th>
-					</tr>
-				</thead>
-
-
-				<tbody>
-
-					{#each materialesStore.materiales as material}
-
-						<tr>
-
-							<td>
-								{material.nombre}
-							</td>
-
-							<td>
-								{material.categoria}
-							</td>
-
-							<td>
-								{material.unidad}
-							</td>
-
-							<td>
-								L {material.costo}
-							</td>
-							<td>
-
-<button
-	class="btn btn-sm"
-	onclick={() => editarMaterial(material)}
->
-	Editar
-</button>
-
-
-<button
-	class="btn btn-sm btn-error"
-	onclick={() => materialesStore.eliminar(material.id)}
->
-	Eliminar
-</button>
-
-</td>
-
-						</tr>
+						<option value={categoria.id}>
+							{categoria.nombre}
+						</option>
 
 					{/each}
 
-				</tbody>
+				</select>
 
-			</table>
-			</Card>
+			</div>
+
+			<div class="text-sm text-gray-500">
+				{articulosFiltrados.length}
+				{articulosFiltrados.length === 1 ? ' artículo' : ' artículos'}
+			</div>
 
 		</div>
 
-
-		{:else if pestaña === 'servicios'}
-
-	<h2 class="text-xl font-semibold mb-4">
-		Servicios comerciales
-	</h2>
-
-	<div class="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
-
-	{#each serviciosStore.servicios as servicio}
-
-		<CatalogCard
-
-	servicio={servicio}
-
-	onEditar={editarServicio}
-
-	onVer={(/** @type {any} */ servicio)=>{
-
-		servicioDetalle = servicio;
-
-	}}
-
-	onCotizar={(/** @type {any} */ servicio)=>{
-
-		servicioParaCotizar = servicio;
-	}}
-
-/>
-
-	{/each}
-
-</div>
-		{:else}
-
-<h2 class="text-xl font-semibold mb-6">
-	Catálogo Comercial
-</h2>
+	</Card>
 
 
-<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+	{#if articulosFiltrados.length === 0}
 
-{#each serviciosStore.servicios as servicio}
+		<Card>
+
+			<div class="p-12 text-center">
+
+				<div class="text-5xl mb-4">
+					📦
+				</div>
+
+				<h2 class="text-xl font-bold">
+					No hay artículos
+				</h2>
+
+				<p class="text-gray-500 mt-2">
+					Crea el primer artículo del catálogo maestro.
+				</p>
+
+			</div>
+
+		</Card>
+
+	{:else}
+
+		<div class="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+
+			{#each articulosFiltrados as articulo}
+
+				<Card>
+
+					<div class="p-6 space-y-5">
+
+						<div class="flex items-start justify-between gap-3">
+
+							<div>
+
+								<span class="badge badge-success mb-2">
+									{nombreCategoria(articulo)}
+								</span>
+
+								<h2 class="text-2xl font-black">
+									{articulo.nombre}
+								</h2>
+
+							</div>
+
+							<span class="badge badge-outline">
+								{articulo.tipo}
+							</span>
+
+						</div>
 
 
-<Card>
+						{#if articulo.descripcion}
 
-	<div class="space-y-4">
+							<p class="text-gray-500">
+								{articulo.descripcion}
+							</p>
 
-
-	<h3 class="text-2xl font-bold">
-		{servicio.nombre}
-	</h3>
-
-
-	<p class="text-gray-600">
-		{servicio.descripcion ?? 
-		"Solución profesional para tu negocio"}
-	</p>
+						{/if}
 
 
-	<div class="text-3xl font-bold text-emerald-600">
+						<div>
 
-		L {servicio.precio}
+							<div class="flex justify-between items-center mb-3">
 
-		<span class="text-base text-gray-500">
-			/ {servicio.unidad}
-		</span>
+								<h3 class="font-bold">
+									Variantes
+								</h3>
 
-	</div>
+								<span class="text-sm text-gray-400">
+									{articulo.variantes?.length ?? 0}
+								</span>
 
+							</div>
+
+
+							{#if articulo.variantes?.length}
+
+								<div class="space-y-2">
+
+									{#each articulo.variantes as variante}
+
+										<div class="rounded-xl border border-gray-200 p-3">
+
+											<div class="font-semibold">
+												{resumenVariante(variante)}
+											</div>
+
+											<div class="text-sm text-gray-500 mt-1">
+
+												Unidad:
+												{variante.unidad}
+
+											</div>
+
+										</div>
+
+									{/each}
+
+								</div>
+
+							{:else}
+
+								<div class="text-sm text-gray-400">
+									Sin variantes registradas.
+								</div>
+
+							{/if}
+
+						</div>
+
+
+						<div class="flex gap-2">
 
 	<button
-	class="btn btn-primary w-full"
-	onclick={() =>
-		location.href =
-		`/crm/cotizaciones/nueva?servicio=${servicio.id}`
-	}
->
-	Solicitar cotización
-</button>
+		class="btn btn-outline flex-1"
+		onclick={() => {
+			articuloSeleccionado = articulo;
+			mostrarFormularioArticulo = true;
+		}}
+	>
+		Editar
+	</button>
 
+	<button
+		class="btn btn-error btn-outline"
+		onclick={() => desactivarArticulo(articulo)}
+	>
+		Desactivar
+	</button>
 
-	</div>
-
-
-</Card>
-
-{#if servicioDetalle}
-
-	<CatalogDetail
-
-		servicio={servicioDetalle}
-
-		onCerrar={() => servicioDetalle = null}
-
-	/>
-
-{/if}
-
-{/each}
+	<button
+		class="btn btn-primary flex-1"
+		onclick={() => {
+			alert(
+				`Próximamente: cotizar ${articulo.nombre}`
+			);
+		}}
+	>
+		Cotizar
+	</button>
 
 </div>
 
+					</div>
+
+				</Card>
+
+			{/each}
+
+		</div>
 
 	{/if}
 
 
+{:else if pestaña === 'proveedores'}
 
-	<Modal
-	titulo="Nuevo Material"
-	abierto={mostrarModal}
-	onCerrar={() => mostrarModal = false}
->
+	<Card>
 
-	<MaterialForm
-	material={materialSeleccionado}
-	onGuardar={cerrarModal}
-/>
+		<div class="p-10 text-center">
 
-</Modal>
+			<div class="text-5xl mb-4">
+				🏢
+			</div>
 
-<Modal
-	titulo="Nuevo Servicio"
-	abierto={mostrarModalServicio}
-	onCerrar={cerrarModalServicio}
->
+			<h2 class="text-xl font-bold">
+				Proveedores
+			</h2>
 
-	<ServicioForm
-		servicio={servicioSeleccionado}
-		onGuardar={cerrarModalServicio}
-	/>
+			<p class="text-gray-500 mt-2">
+				El módulo de proveedores se conectará al catálogo maestro.
+			</p>
 
-</Modal>
+		</div>
 
-{#if servicioParaCotizar}
+	</Card>
 
-<CotizadorModal
 
-	servicio={servicioParaCotizar}
+{:else}
 
-	onCerrar={()=>servicioParaCotizar=null}
+	<Card>
 
-/>
+		<div class="p-10 text-center">
+
+			<div class="text-5xl mb-4">
+				📋
+			</div>
+
+			<h2 class="text-xl font-bold">
+				Plantillas de cotización
+			</h2>
+
+			<p class="text-gray-500 mt-2">
+				Aquí aparecerán las plantillas creadas automáticamente desde las cotizaciones.
+			</p>
+
+		</div>
+
+	</Card>
+
+{/if}
+{#if mostrarFormularioArticulo}
+
+	<div class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+
+		<div class="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+
+			<div class="p-6 border-b flex justify-between items-center">
+
+				<div>
+					<h2 class="text-2xl font-black">
+						{articuloSeleccionado
+							? 'Editar artículo'
+							: 'Nuevo artículo'}
+					</h2>
+
+					<p class="text-sm text-gray-500">
+						Define el artículo y sus variantes.
+					</p>
+				</div>
+
+				<button
+					class="btn btn-sm"
+					onclick={cerrarFormularioArticulo}
+				>
+					✕
+				</button>
+
+			</div>
+
+			<div class="p-6">
+
+				<ArticuloForm
+					categorias={categorias}
+					articulo={articuloSeleccionado}
+					onGuardar={() => {
+						cerrarFormularioArticulo();
+						location.reload();
+					}}
+					onCancelar={cerrarFormularioArticulo}
+				/>
+
+			</div>
+
+		</div>
+
+	</div>
 
 {/if}
 </div>

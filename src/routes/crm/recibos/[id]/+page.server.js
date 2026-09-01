@@ -75,58 +75,79 @@ export async function load({ params }) {
 		);
 	}
 
-	const historial = recibosProyecto ?? [];
 
-	/*
-	 * 4. Moneda de la cotización
-	 *
-	 * Los pagos en otra moneda NO se convierten
-	 * ni participan en el saldo de la cotización.
-	 */
-	const monedaCotizacion = cotizacion.moneda;
+const historial = recibosProyecto ?? [];
 
-	const historialMonedaCotizacion =
-		historial.filter(
-			(item) => item.moneda === monedaCotizacion
-		);
+/*
+ * 4. Normalizar monedas
+ *
+ * L y HNL representan la misma moneda.
+ * $ y USD representan la misma moneda.
+ * ₱ y MXN representan la misma moneda.
+ *
+ * Esto evita que un pago quede fuera del saldo
+ * solamente porque fue registrado con otro formato.
+ */
+/** @param {string | null | undefined} moneda */
+const normalizarMoneda = (moneda) => {
+	if (moneda === 'L' || moneda === 'HNL') return 'HNL';
+	if (moneda === '$' || moneda === 'USD') return 'USD';
+	if (moneda === '₱' || moneda === 'MXN') return 'MXN';
 
-	/*
-	 * 5. Pagos anteriores en la moneda de la cotización
-	 */
-	const pagadoAnteriormente =
-		historialMonedaCotizacion
-			.filter((item) => item.id !== recibo.id)
-			.reduce((total, item) => {
-				return total + Number(item.monto ?? 0);
-			}, 0);
+	return moneda;
+};
 
-	/*
-	 * 6. Pago actual
-	 */
-	const pagoActual = Number(recibo.monto ?? 0);
+const monedaCotizacion =
+	normalizarMoneda(cotizacion.moneda);
 
-	/*
-	 * 7. Total del proyecto
-	 */
-	const totalProyecto =
-		Number(cotizacion.total ?? 0);
+const monedaRecibo =
+	normalizarMoneda(recibo.moneda);
 
-	/*
-	 * 8. Determinar si el recibo participa
-	 *    en el saldo de la cotización.
-	 */
-	const pagoParticipaEnSaldo =
-		recibo.moneda === monedaCotizacion;
-
-	const totalPagado =
-		pagoParticipaEnSaldo
-			? pagadoAnteriormente + pagoActual
-			: pagadoAnteriormente;
-
-	const saldoPendiente = Math.max(
-		0,
-		totalProyecto - totalPagado
+const historialMonedaCotizacion =
+	historial.filter(
+		(item) =>
+			normalizarMoneda(item.moneda) ===
+			monedaCotizacion
 	);
+
+/*
+ * 5. Pagos anteriores en la moneda de la cotización
+ */
+const pagadoAnteriormente =
+	historialMonedaCotizacion
+		.filter((item) => item.id !== recibo.id)
+		.reduce((total, item) => {
+			return total + Number(item.monto ?? 0);
+		}, 0);
+
+/*
+ * 6. Pago actual
+ */
+const pagoActual =
+	Number(recibo.monto ?? 0);
+
+/*
+ * 7. Total del proyecto
+ */
+const totalProyecto =
+	Number(cotizacion.total ?? 0);
+
+/*
+ * 8. Determinar si el recibo participa
+ *    en el saldo de la cotización.
+ */
+const pagoParticipaEnSaldo =
+	monedaRecibo === monedaCotizacion;
+
+const totalPagado =
+	pagoParticipaEnSaldo
+		? pagadoAnteriormente + pagoActual
+		: pagadoAnteriormente;
+
+const saldoPendiente = Math.max(
+	0,
+	totalProyecto - totalPagado
+);
 
 	/*
 	 * 9. Entregar datos al +page.svelte

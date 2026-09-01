@@ -1,578 +1,623 @@
 /** @typedef {import('$lib/types/clientes').Cliente} Cliente */
-/** @typedef {import('$lib/types/clientes').Gasto} Gasto */
-/** @typedef {import('$lib/types/clientes').Pago} Pago */
 
-let clientes = $state(/** @type {Cliente[]} */ ([]));
+const STORAGE_KEY = 'crm_clientes';
 
-export function obtenerClientes(){
-
-    return clientes;
-
-}
-
-
+let clientes = $state(
+	/** @type {Cliente[]} */([])
+);
 
 /**
- * @param {number|string} id
+ * Genera un ID único para el cliente.
  */
-export function obtenerCliente(id){
-
-    return clientes.find(
-        cliente => String(cliente.id) === String(id)
-    );
-
-}
-
-
-
-/**
- * @param {number|string} id
- * @param {string} nuevoEstado
- */
-    export function cambiarEstado(id, nuevoEstado) {
-
-    const cliente = clientes.find(
-        c => String(c.id) === String(id)
-    );
-
-    if (cliente) {
-
-        const estadoAnterior = cliente.estado;
-
-        cliente.estado = nuevoEstado;
-
-        cliente.actividades ??= [];
-
-       cliente.actividades.unshift({
-    id: Date.now(),
-
-    clienteId: cliente.id,
-    campanaId: null,
-
-    fecha: new Date().toISOString(),
-
-    titulo: "Estado actualizado",
-    descripcion: `${estadoAnterior} → ${nuevoEstado}`,
-
-    tipo: "sistema",
-    categoriaId: 1,
-
-    estado: "completada",
-    prioridad: "media",
-
-    responsable: "usuario",
-    origen: "cliente",
-
-    fechaCreacion: new Date().toISOString(),
-
-    fechaObjetivo: null,
-    fechaCompletada: new Date().toISOString()
-});
-
-        guardarClientes();
-    }
+function generarId() {
+	return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 /**
- * @param {{
-nombre:string,
-empresa:string,
-telefono?:string,
-correo?:string
-}} datos
+ * Carga los clientes desde localStorage.
  */
-export function crearCliente(datos){
+function cargarClientes() {
+	if (typeof localStorage === 'undefined') return;
 
+	try {
+		const datos = localStorage.getItem(STORAGE_KEY);
 
-const nuevoCliente = {
+		if (!datos) return;
 
-    id: Date.now(),
+		const parsed = JSON.parse(datos);
 
-    nombre: datos.nombre,
-
-    empresa: datos.empresa,
-
-    estado:"Nuevo contacto",
-
-    telefono:datos.telefono ?? "",
-
-    correo:datos.correo ?? "",
-
-    actividades:[],
-
-    pagos:[],
-
-    gastos:[],
-
-    ultimaActividad:null,
-
-    proyecto:"",
-    valor:0,
-
-    nivelSeguimiento:{
-        etiqueta:"Cliente nuevo",
-        color:"gray",
-        icono:"👤"
-    }
-
-};
-
-
-clientes.push(nuevoCliente);
-
-guardarClientes();
-
-return nuevoCliente;
-
+		if (Array.isArray(parsed)) {
+			clientes = parsed;
+		}
+	} catch (error) {
+		console.error('Error cargando clientes:', error);
+		clientes = [];
+	}
 }
 
+/**
+ * Guarda los clientes.
+ */
 function guardarClientes() {
+	if (typeof localStorage === 'undefined') return;
 
-    if (typeof localStorage === "undefined") return;
-
-    localStorage.setItem(
-        "clientes",
-        JSON.stringify(clientes)
-    );
-}
-
-
-function cargarClientes(){
-
-    if(typeof localStorage === "undefined"){
-        return;
-    }
-
-
-    const datos = localStorage.getItem("clientes");
-
-
-    if (datos) {
-    clientes = JSON.parse(datos);
-}
-
-}
-
-
-if (typeof window !== "undefined") {
-    cargarClientes();
-}
-
-export function obtenerClientesSinAccion(){
-
-    return clientes.filter(
-        cliente => !cliente.siguienteAccion
-    );
-
+	try {
+		localStorage.setItem(
+			STORAGE_KEY,
+			JSON.stringify(clientes)
+		);
+	} catch (error) {
+		console.error('Error guardando clientes:', error);
+	}
 }
 
 /**
+ * Normaliza un cliente para garantizar
+ * que siempre tenga la estructura esperada.
+ *
+ * @param {Partial<Cliente>} datos
+ */
+function normalizarCliente(datos) {
+	return {
+		id: datos.id ?? generarId(),
+
+		nombre: datos.nombre ?? '',
+		empresa: datos.empresa ?? '',
+
+		estado: datos.estado ?? 'Nuevo contacto',
+
+		proyecto: datos.proyecto ?? '',
+
+		valor: Number(datos.valor ?? 0),
+
+		telefono: datos.telefono ?? '',
+
+		correo: datos.correo ?? '',
+
+		siguienteAccion: datos.siguienteAccion ?? '',
+
+		actividades: Array.isArray(datos.actividades)
+			? datos.actividades
+			: [],
+
+		pagos: Array.isArray(datos.pagos)
+			? datos.pagos
+			: [],
+
+		gastos: Array.isArray(datos.gastos)
+			? datos.gastos
+			: [],
+
+		ultimaActividad:
+			datos.ultimaActividad ?? null,
+
+		nivelSeguimiento:
+			datos.nivelSeguimiento ?? {
+				etiqueta: 'Cliente nuevo',
+				color: 'gris',
+				icono: '⚫'
+			}
+	};
+}
+
+
+/**
+ * Obtener todos los clientes.
+ */
+export function obtenerClientes() {
+	return clientes;
+}
+
+
+/**
+ * Obtener un cliente por ID.
+ *
+ * @param {number|string} id
+ */
+export function obtenerCliente(id) {
+	return clientes.find(
+		cliente => String(cliente.id) === String(id)
+	);
+}
+
+
+/**
+ * Crear un cliente.
+ *
+ * @param {Partial<Cliente>} datos
+ */
+export function crearCliente(datos) {
+	if (!datos.nombre?.trim()) {
+		console.warn('No se puede crear un cliente sin nombre.');
+		return null;
+	}
+
+	const nuevoCliente = normalizarCliente({
+		...datos,
+		id: generarId()
+	});
+
+	clientes.push(nuevoCliente);
+
+	guardarClientes();
+
+	return nuevoCliente;
+}
+
+
+/**
+ * Actualizar un cliente.
+ *
  * @param {number|string} id
  * @param {Partial<Cliente>} datos
  */
-export function actualizarCliente(id, datos){
+export function actualizarCliente(id, datos) {
+	const cliente = obtenerCliente(id);
 
-    const cliente = clientes.find(
-        c => c.id === id
-    );
+	if (!cliente) {
+		console.warn(`Cliente ${id} no encontrado.`);
+		return null;
+	}
 
-    if(!cliente) return;
+	Object.assign(cliente, datos);
 
-    Object.assign(cliente, datos);
+	if (datos.valor !== undefined) {
+		cliente.valor = Number(datos.valor) || 0;
+	}
 
-    guardarClientes();
+	guardarClientes();
 
+	return cliente;
 }
 
-export function obtenerSeguimientos(){
 
-    return clientes
-    .map(cliente => {
-
-
-        const ultima =
-        cliente.actividades?.[0] ?? null;
-
-
-
-        return {
-
-            id: cliente.id,
-
-            nombre: cliente.nombre,
-
-            empresa: cliente.empresa,
-
-
-            estado: cliente.estado,
-
-
-            siguienteAccion:
-            cliente.siguienteAccion,
-
-
-            valor:
-            cliente.valor,
-
-
-            proyecto:
-            cliente.proyecto,
-
-
-            ultimaActividad: ultima,
-
-
-            tiempoSinContacto:
-            calcularTiempoSinContacto(
-                ultima?.fecha
-            ),
-
-
-            nivelSeguimiento:
-            calcularNivelSeguimiento(
-                ultima?.fecha
-            ),
-
-            accionRecomendada:
-            calcularAccionSeguimiento(
-                ultima?.fecha,
-                cliente.estado
-            )
-
-
-        };
-
-
-    })
-    .sort((a,b)=>{
-
-
-        const fechaA =
-        a.ultimaActividad?.fecha ?? 0;
-
-
-        const fechaB =
-        b.ultimaActividad?.fecha ?? 0;
-
-
-        return new Date(fechaB).getTime() - new Date(fechaA).getTime();
-
-
-    });
-
-    
-
-
-}
 /**
+ * Eliminar un cliente.
+ *
  * @param {number|string} id
- * @param {Gasto} gasto
  */
+export function eliminarCliente(id) {
+	const indice = clientes.findIndex(
+		cliente => String(cliente.id) === String(id)
+	);
 
-export function registrarGasto(id, gasto){
+	if (indice === -1) {
+		console.warn(`Cliente ${id} no encontrado.`);
+		return false;
+	}
 
-    const cliente =
-    clientes.find(
-        cliente => cliente.id === id
-    );
+	clientes.splice(indice, 1);
 
+	guardarClientes();
 
-    if(cliente){
-
-       cliente.gastos.push({
-
-        id: Date.now(),
-
-        tipo:"gasto",
-
-        fecha:new Date().toISOString(),
-
-        concepto:gasto.concepto,
-
-        monto:Number(gasto.monto)
-
-        });
-
-
-        guardarClientes();
-
-    }
-
+	return true;
 }
 
+
 /**
- 
- * @property {string} fecha
- * @property {string} concepto
- * @property {number} valor
- * @property {number} valorProyecto
+ * Cambiar estado del cliente.
+ *
+ * @param {number|string} id
+ * @param {string} nuevoEstado
  */
+export function cambiarEstado(id, nuevoEstado) {
+	const cliente = obtenerCliente(id);
+
+	if (!cliente) return null;
+
+	const estadoAnterior = cliente.estado;
+
+	cliente.estado = nuevoEstado;
+
+	cliente.actividades ??= [];
+
+	const ahora = new Date().toISOString();
+
+	cliente.actividades.unshift({
+		id: generarId(),
+
+		clienteId: cliente.id,
+		campanaId: null,
+
+		fecha: ahora,
+
+		titulo: 'Estado actualizado',
+
+		descripcion:
+			`${estadoAnterior} → ${nuevoEstado}`,
+
+		tipo: 'sistema',
+
+		categoriaId: 1,
+
+		estado: 'completada',
+
+		prioridad: 'media',
+
+		responsable: 'usuario',
+
+		origen: 'cliente',
+
+		fechaCreacion: ahora,
+
+		fechaObjetivo: null,
+
+		fechaCompletada: ahora
+	});
+
+	cliente.ultimaActividad =
+		cliente.actividades[0];
+
+	guardarClientes();
+
+	return cliente;
+}
 
 /**
  * @param {number|string} id
- * @param {Pago} pago
+ * @param {Partial<import('$lib/types/clientes').Actividad>} datos
  */
-export function registrarPago(id, pago){
+export function registrarActividad(id, datos) {
+	const cliente = obtenerCliente(id);
 
-    const cliente = clientes.find(
-        cliente => cliente.id === id
-    );
+	if (!cliente) return null;
 
-    if(cliente){
+	const ahora = new Date().toISOString();
 
-        cliente.pagos.push({
+	const actividad = {
+		id: generarId(),
 
-            id: Date.now(),
+		clienteId: cliente.id,
 
-            tipo:"ingreso",
+		campanaId: null,
 
-            fecha:new Date().toISOString(),
+		titulo: datos.titulo ?? 'Actividad',
 
-            concepto:pago.concepto,
+		descripcion: datos.descripcion ?? '',
 
-            monto:Number(pago.monto)
+		tipo: datos.tipo ?? 'seguimiento',
 
-        });
+		categoriaId: datos.categoriaId ?? 1,
 
-        guardarClientes();
+		estado: datos.estado ?? 'completada',
 
-    }
+		prioridad: datos.prioridad ?? 'media',
 
+		responsable: datos.responsable ?? 'usuario',
+
+		origen: datos.origen ?? 'cliente',
+
+		referencia: datos.referencia ?? null,
+
+		fecha: datos.fecha ?? ahora,
+
+		fechaCreacion: ahora,
+
+		fechaObjetivo: datos.fechaObjetivo ?? null,
+
+		fechaCompletada:
+			datos.estado === 'pendiente'
+				? null
+				: ahora
+	};
+
+	cliente.actividades ??= [];
+
+	cliente.actividades.unshift(actividad);
+
+	cliente.ultimaActividad = actividad;
+
+	guardarClientes();
+
+	return actividad;
 }
-    
+
+
 /**
+ * Registrar ingreso/pago.
+ *
  * @param {number|string} id
+ * @param {{concepto:string,monto:number}} datos
  */
-export function obtenerRentabilidad(id){
+export function registrarPago(id, datos) {
+	const cliente = obtenerCliente(id);
 
-    const cliente =
-    clientes.find(
-        cliente => cliente.id === id
-    );
+	if (!cliente) return null;
 
+	/** @type {import('$lib/types/clientes').Movimiento} */
+		const pago = {
+		id: generarId(),
 
-    if(!cliente){
+		tipo: 'ingreso',
 
-        return null;
+		fecha: new Date().toISOString(),
 
-    }
+		concepto: datos.concepto,
 
+		monto: Number(datos.monto) || 0,
 
+		clienteId: cliente.id
+	};
 
-    const ingresos =
-    cliente.pagos.reduce(
-    /**
-     * @param {number} total
-     * @param {import('$lib/types/clientes').Pago} pago
-     */
-    (total,pago)=>
-        total + pago.monto,
-    0
-    );
+	cliente.pagos ??= [];
 
+	cliente.pagos.push(pago);
 
-    const gastos =
-cliente.gastos.reduce(
-    /**
-     * @param {number} total
-     * @param {import('$lib/types/clientes').Gasto} gasto
-     */
-    (total,gasto)=>
-    total + gasto.monto,
-    0
-);
+	guardarClientes();
+
+	return pago;
+}
 
 
-    return {
+/**
+ * Registrar gasto.
+ *
+ * @param {number|string} id
+ * @param {{concepto:string,monto:number}} datos
+ */
+export function registrarGasto(id, datos) {
+	const cliente = obtenerCliente(id);
 
-    ingresos,
+	if (!cliente) return null;
 
-    gastos,
-
-    ganancia:
-
-    ingresos - gastos,
-
-    pendiente:
-
-    cliente.valor - ingresos
-
+	/** @type {import('$lib/types/clientes').Movimiento} */
+const gasto = {
+    id: generarId(),
+    tipo: 'gasto',
+    fecha: new Date().toISOString(),
+    concepto: datos.concepto,
+    monto: Number(datos.monto) || 0,
+    clienteId: cliente.id
 };
 
+	cliente.gastos ??= [];
 
-}
-/**
- * @param {string|Date|null|undefined} fecha
- */
-function calcularTiempoSinContacto(fecha){
+	cliente.gastos.push(gasto);
 
-    if(!fecha){
+	guardarClientes();
 
-        return "Sin contacto";
-
-    }
-
-
-    const ahora = Date.now();
-    const ultima = new Date(fecha).getTime();
-
-
-    const diferencia =
-    ahora - ultima;
-
-
-    const horas =
-    Math.floor(
-        diferencia / (1000 * 60 * 60)
-    );
-
-
-    if(horas < 1){
-
-        return "Hace menos de 1 hora";
-
-    }
-
-
-    if(horas < 24){
-
-        return `Hace ${horas} horas`;
-
-    }
-
-
-    const dias =
-    Math.floor(horas / 24);
-
-
-    return `Hace ${dias} días`;
-
-}
-/**
- * @param {string|Date|null|undefined} fecha
- */
-function calcularNivelSeguimiento(fecha){
-
-    if(!fecha){
-
-        return {
-
-            etiqueta:"Sin contacto",
-
-            color:"gris",
-
-            icono:"⚫"
-
-        };
-
-    }
-
-
-const ahora = new Date();
-
-const ultima = new Date(fecha);
-
-
-const horas =
-(ahora.getTime() - ultima.getTime()) /
-(1000 * 60 * 60);
-
-
-    if(horas < 24){
-
-        return {
-
-            etiqueta:"Activo",
-
-            color:"verde",
-
-            icono:"🟢"
-
-        };
-
-    }
-
-
-    if(horas < 72){
-
-        return {
-
-            etiqueta:"Atención",
-
-            color:"amarillo",
-
-            icono:"🟡"
-
-        };
-
-    }
-
-
-    return {
-
-        etiqueta:"Riesgo",
-
-        color:"rojo",
-
-        icono:"🔴"
-
-    };
-
-
+	return gasto;
 }
 
+
 /**
- * @param {string|Date|null|undefined} fecha
- * @param {string} [estado]
+ * Obtener rentabilidad de un cliente.
+ *
+ * @param {number|string} id
  */
-function calcularAccionSeguimiento(fecha, estado = ""){
+export function obtenerRentabilidad(id) {
+	const cliente = obtenerCliente(id);
 
-    const horas =
-    fecha
-    ?
-    (Date.now() - new Date(fecha).getTime()) /
-    (1000 * 60 * 60)
-    :
-    999;
+	if (!cliente) return null;
 
+	const ingresos =
+	cliente.pagos?.reduce(
+		/**
+		 * @param {number} total
+		 * @param {import('$lib/types/clientes').Movimiento} pago
+		 */
+		(total, pago) =>
+			total + Number(pago.monto || 0),
+		0
+	) ?? 0;
 
-    if(!fecha){
+	const gastos =
+	cliente.gastos?.reduce(
+		/**
+		 * @param {number} total
+		 * @param {import('$lib/types/clientes').Movimiento} gasto
+		 */
+		(total, gasto) =>
+			total + Number(gasto.monto || 0),
+		0
+	) ?? 0;
 
-        return "Registrar primer contacto";
+	const valorProyecto =
+		Number(cliente.valor || 0);
 
-    }
+	return {
+		ingresos,
 
+		gastos,
 
-    if(horas < 1){
+		ganancia:
+			ingresos - gastos,
 
-        return "Continuar negociación";
-
-    }
-
-
-    if(horas < 24){
-
-        return "Enviar seguimiento";
-
-    }
-
-
-    if(horas < 72){
-
-        return "Realizar llamada";
-
-    }
-
-
-    if(
-        estado === "Cotización enviada"
-    ){
-
-        return "Confirmar decisión del cliente";
-
-    }
+		pendiente:
+			valorProyecto - ingresos
+	};
+}
 
 
-    return "Reactivar cliente";
+/**
+ * Clientes sin próxima acción.
+ */
+export function obtenerClientesSinAccion() {
+	return clientes.filter(
+		cliente => !cliente.siguienteAccion
+	);
+}
 
+
+/**
+ * Información de seguimiento.
+ */
+export function obtenerSeguimientos() {
+	return clientes
+		.map(cliente => {
+			const ultima =
+				cliente.actividades?.[0] ?? null;
+
+			return {
+				id: cliente.id,
+
+				nombre: cliente.nombre,
+
+				empresa: cliente.empresa,
+
+				estado: cliente.estado,
+
+				siguienteAccion:
+					cliente.siguienteAccion,
+
+				valor: cliente.valor,
+
+				proyecto: cliente.proyecto,
+
+				ultimaActividad: ultima,
+
+				tiempoSinContacto:
+					calcularTiempoSinContacto(
+						ultima?.fecha
+					),
+
+				nivelSeguimiento:
+					calcularNivelSeguimiento(
+						ultima?.fecha
+					),
+
+				accionRecomendada:
+					calcularAccionSeguimiento(
+						ultima?.fecha,
+						cliente.estado
+					)
+			};
+		})
+		.sort((a, b) => {
+			const fechaA =
+				a.ultimaActividad?.fecha ?? 0;
+
+			const fechaB =
+				b.ultimaActividad?.fecha ?? 0;
+
+			return (
+				new Date(fechaB).getTime() -
+				new Date(fechaA).getTime()
+			);
+		});
+}
+
+
+/**
+ * Tiempo desde el último contacto.
+ *
+ * @param {string|Date|null|undefined} fecha
+ */
+function calcularTiempoSinContacto(fecha) {
+	if (!fecha) return 'Sin contacto';
+
+	const diferencia =
+		Date.now() -
+		new Date(fecha).getTime();
+
+	const horas = Math.floor(
+		diferencia /
+			(1000 * 60 * 60)
+	);
+
+	if (horas < 1) {
+		return 'Hace menos de 1 hora';
+	}
+
+	if (horas < 24) {
+		return `Hace ${horas} horas`;
+	}
+
+	const dias = Math.floor(
+		horas / 24
+	);
+
+	return `Hace ${dias} días`;
+}
+
+
+/**
+ * Nivel de seguimiento.
+ *
+ * @param {string|Date|null|undefined} fecha
+ */
+function calcularNivelSeguimiento(fecha) {
+	if (!fecha) {
+		return {
+			etiqueta: 'Sin contacto',
+			color: 'gris',
+			icono: '⚫'
+		};
+	}
+
+	const horas =
+		(Date.now() -
+			new Date(fecha).getTime()) /
+		(1000 * 60 * 60);
+
+	if (horas < 24) {
+		return {
+			etiqueta: 'Activo',
+			color: 'verde',
+			icono: '🟢'
+		};
+	}
+
+	if (horas < 72) {
+		return {
+			etiqueta: 'Atención',
+			color: 'amarillo',
+			icono: '🟡'
+		};
+	}
+
+	return {
+		etiqueta: 'Riesgo',
+		color: 'rojo',
+		icono: '🔴'
+	};
+}
+
+
+/**
+ * Acción recomendada.
+ *
+ * @param {string|Date|null|undefined} fecha
+ * @param {string} estado
+ */
+function calcularAccionSeguimiento(
+	fecha,
+	estado = ''
+) {
+	const horas = fecha
+		?
+			(Date.now() -
+				new Date(fecha).getTime()) /
+			(1000 * 60 * 60)
+		: 999;
+
+	if (!fecha) {
+		return 'Registrar primer contacto';
+	}
+
+	if (horas < 1) {
+		return 'Continuar negociación';
+	}
+
+	if (horas < 24) {
+		return 'Enviar seguimiento';
+	}
+
+	if (horas < 72) {
+		return 'Realizar llamada';
+	}
+
+	if (estado === 'Cotización enviada') {
+		return 'Confirmar decisión del cliente';
+	}
+
+	return 'Reactivar cliente';
+}
+
+
+/*
+ * Cargar datos al iniciar la aplicación.
+ */
+if (typeof window !== 'undefined') {
+	cargarClientes();
 }

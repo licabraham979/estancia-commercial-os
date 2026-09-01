@@ -12,7 +12,7 @@ let { params } = $props();
 
 
 const cliente = $derived(
-    obtenerCliente(Number(params.id))
+    obtenerCliente(params.id)
 );
 
 
