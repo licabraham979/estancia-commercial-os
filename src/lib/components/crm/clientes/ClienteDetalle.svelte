@@ -16,12 +16,46 @@ import { actividadesStore } from '$lib/stores/actividades.svelte.js';
 let {cliente = null} = $props();
 
 
-function crearSeguimiento(titulo= ''){ 
+let accionSeleccionada = $state('');
+let fechaObjetivo = $state('');
+let siguienteAccion = $state('');
+let nota = $state('');
 
-    actividadesStore.crearActividadCliente(
-        titulo,
-        cliente.id
+function abrirAccion(
+    /** @type {string} */ accion
+){
+
+    accionSeleccionada = accion;
+
+    siguienteAccion = '';
+    fechaObjetivo = '';
+    nota = '';
+
+}
+
+function cancelarAccion(){
+
+    accionSeleccionada = '';
+
+}
+
+function guardarAccion(){
+
+    if(!accionSeleccionada) return;
+
+    actividadesStore.registrarAccionCliente(
+        accionSeleccionada,
+        cliente.id,
+        fechaObjetivo || null,
+        siguienteAccion,
+        nota
     );
+
+    accionSeleccionada = '';
+
+    siguienteAccion = '';
+    fechaObjetivo = '';
+    nota = '';
 
 }
 </script>
@@ -142,26 +176,84 @@ Próxima acción
 </h3>
 
 
-<button onclick={() => crearSeguimiento('Llamar cliente')}>
+<button onclick={() => abrirAccion('Llamar cliente')}>
 📞 Registrar llamada
 </button>
 
 
-<button onclick={() => crearSeguimiento('Enviar cotización')}>
+<button onclick={() => abrirAccion('Enviar cotización')}>
 📄 Enviar cotización
 </button>
 
-
-<button onclick={() => crearSeguimiento('Programar seguimiento')}>
+<button onclick={() => abrirAccion('Programar seguimiento')}>
 📅 Seguimiento
 </button>
 
-
-<button onclick={() => crearSeguimiento('Registrar pago')}>
+<button onclick={() => abrirAccion('Registrar pago')}>
 💰 Pago recibido
 </button>
 
+{#if accionSeleccionada}
 
+<div class="accion-form">
+
+<h4>
+Registrar acción
+</h4>
+
+<p>
+{accionSeleccionada}
+</p>
+
+<label>
+Próxima acción
+</label>
+
+<input
+    type="text"
+    bind:value={siguienteAccion}
+    placeholder="Ej. Llamar nuevamente"
+/>
+
+<label>
+Fecha y hora
+</label>
+
+<input
+    type="datetime-local"
+    bind:value={fechaObjetivo}
+/>
+
+<label>
+Nota
+</label>
+
+<textarea
+    bind:value={nota}
+    placeholder="Ej. Revisar respuesta del cliente"
+></textarea>
+
+<div class="form-buttons">
+
+<button
+    type="button"
+    onclick={guardarAccion}
+>
+Guardar acción
+</button>
+
+<button
+    type="button"
+    onclick={cancelarAccion}
+>
+Cancelar
+</button>
+
+</div>
+
+</div>
+
+{/if}
 </div>
 
 <ClienteInformacionEditar 

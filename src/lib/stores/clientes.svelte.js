@@ -443,60 +443,102 @@ export function obtenerClientesSinAccion() {
  * Información de seguimiento.
  */
 export function obtenerSeguimientos() {
-	return clientes
-		.map(cliente => {
-			const ultima =
-				cliente.actividades?.[0] ?? null;
 
-			return {
-				id: cliente.id,
+    const ahora = Date.now();
 
-				nombre: cliente.nombre,
+    return clientes
 
-				empresa: cliente.empresa,
+        .filter(cliente => {
 
-				estado: cliente.estado,
+            const pendiente =
+                (cliente.actividades ?? []).find(
+                    actividad =>
+                        actividad.estado === 'pendiente' &&
+                        actividad.fechaObjetivo
+                );
 
-				siguienteAccion:
-					cliente.siguienteAccion,
+            return !pendiente ||
+              new Date(
+    pendiente.fechaObjetivo ?? 0
+).getTime() <= ahora;
 
-				valor: cliente.valor,
+        })
 
-				proyecto: cliente.proyecto,
+        .map(cliente => {
 
-				ultimaActividad: ultima,
+            const actividades =
+                cliente.actividades ?? [];
 
-				tiempoSinContacto:
-					calcularTiempoSinContacto(
-						ultima?.fecha
-					),
+            const pendiente =
+                actividades.find(
+                    actividad =>
+                        actividad.estado === 'pendiente' &&
+                        actividad.fechaObjetivo
+                );
 
-				nivelSeguimiento:
-					calcularNivelSeguimiento(
-						ultima?.fecha
-					),
+            const ultima =
+                actividades.find(
+                    actividad =>
+                        actividad.estado === 'completada'
+                ) ?? null;
 
-				accionRecomendada:
-					calcularAccionSeguimiento(
-						ultima?.fecha,
-						cliente.estado
-					)
-			};
-		})
-		.sort((a, b) => {
-			const fechaA =
-				a.ultimaActividad?.fecha ?? 0;
+            return {
 
-			const fechaB =
-				b.ultimaActividad?.fecha ?? 0;
+                id: cliente.id,
 
-			return (
-				new Date(fechaB).getTime() -
-				new Date(fechaA).getTime()
-			);
-		});
+                nombre: cliente.nombre,
+
+                empresa: cliente.empresa,
+
+                estado: cliente.estado,
+
+                siguienteAccion:
+                    pendiente?.titulo ??
+                    cliente.siguienteAccion,
+
+                valor: cliente.valor,
+
+                proyecto: cliente.proyecto,
+
+                ultimaActividad: ultima,
+
+                tiempoSinContacto:
+                    calcularTiempoSinContacto(
+                        ultima?.fecha
+                    ),
+
+                nivelSeguimiento:
+                    calcularNivelSeguimiento(
+                        ultima?.fecha
+                    ),
+
+                accionRecomendada:
+                    pendiente?.titulo ??
+                    calcularAccionSeguimiento(
+                        ultima?.fecha,
+                        cliente.estado
+                    )
+
+            };
+
+        })
+
+        .sort((a, b) => {
+
+            const fechaA =
+                a.ultimaActividad?.fecha ?? 0;
+
+            const fechaB =
+                b.ultimaActividad?.fecha ?? 0;
+
+            return (
+                new Date(fechaB).getTime() -
+                new Date(fechaA).getTime()
+            );
+
+        });
+
 }
-
 
 /**
  * Tiempo desde el último contacto.

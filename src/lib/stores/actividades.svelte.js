@@ -1,5 +1,5 @@
 /** @typedef {import('$lib/types/clientes').Actividad} Actividad */
-
+import { registrarActividad } from './clientes.svelte.js';
 let actividades = $state(
     /** @type {Actividad[]} */ 
     ([])
@@ -322,6 +322,7 @@ crearActividadCliente(
 
 
     this.guardar();
+    return this.actividades[0].id;
 
 }
 
@@ -329,7 +330,8 @@ crearSeguimiento(
     /** @type {string} */ titulo,
     /** @type {number|string|null} */ clienteId,
     /** @type {string} */ fechaObjetivo,
-    /** @type {number|string|null} */ referencia = null
+    /** @type {number|string|null} */ referencia = null,
+    /** @type {string} */ descripcion = ''
 ){
 
     this.actividades.unshift({
@@ -342,7 +344,7 @@ crearSeguimiento(
 
         titulo,
 
-        descripcion:'',
+        descripcion,
 
         tipo:'seguimiento',
 
@@ -370,6 +372,82 @@ crearSeguimiento(
 
     this.guardar();
 
+return this.actividades[0].id;
+
+}
+
+/**
+ * Registra una acción comercial realizada
+ * y opcionalmente programa la siguiente acción.
+ *
+ * @param {string} accion
+ * @param {number|string|null} clienteId
+ * @param {string|null} fechaObjetivo
+ * @param {string} siguienteAccion
+ * @param {string} nota
+ */
+registrarAccionCliente(
+    accion,
+    clienteId,
+    fechaObjetivo = null,
+    siguienteAccion = '',
+    nota = ''
+){
+
+    // 1. Registrar lo que acaba de ocurrir
+    const actividadId =
+        this.crearActividadCliente(
+            accion,
+            clienteId
+        );
+
+        if (clienteId === null) return;
+
+        registrarActividad(
+    clienteId,
+    {
+        titulo: accion,
+        descripcion: nota,
+        tipo: 'seguimiento',
+        estado: 'completada',
+        origen: 'cliente'
+    }
+);
+
+    // 2. Marcar esa actividad como completada
+    this.completarActividad(
+        actividadId
+    );
+
+    // 3. Crear la próxima acción solamente
+    //    si realmente existe
+    if (
+    fechaObjetivo &&
+    siguienteAccion
+){
+
+    this.crearSeguimiento(
+        siguienteAccion,
+        clienteId,
+        fechaObjetivo,
+        clienteId,
+        nota
+    );
+
+    registrarActividad(
+        clienteId,
+        {
+            titulo: siguienteAccion,
+            descripcion: nota,
+            tipo: 'seguimiento',
+            estado: 'pendiente',
+            origen: 'cliente',
+            referencia: clienteId,
+            fechaObjetivo: fechaObjetivo
+        }
+    );
+
+}
 }
 
 cambiarFechaObjetivo(

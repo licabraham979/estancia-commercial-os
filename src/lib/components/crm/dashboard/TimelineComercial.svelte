@@ -1,6 +1,7 @@
 <script>
 
 import { dashboardStore } from '$lib/stores/dashboard.svelte.js';
+import { goto } from '$app/navigation';
 
 
 const seguimientos = $derived(
@@ -63,11 +64,13 @@ No hay seguimientos registrados.
 {cliente.nivelSeguimiento.etiqueta}
 
 </p>
-<p class="accion">
-
+<button
+    class="accion"
+    type="button"
+    onclick={() => goto(`/crm/clientes/${cliente.id}`)}
+>
 🎯 {cliente.accionRecomendada}
-
-</p>
+</button>
 <p>
 🏠 {cliente.proyecto}
 </p>

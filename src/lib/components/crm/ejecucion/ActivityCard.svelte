@@ -39,7 +39,11 @@ function formatearFecha(/** @type {string|null|undefined} */ fecha){
 
     if(!fecha) return 'Sin fecha';
 
-    const fechaObj = new Date(`${fecha}T00:00:00`);
+    const fechaObj = new Date(fecha);
+
+    if(Number.isNaN(fechaObj.getTime())){
+        return 'Sin fecha';
+    }
 
     return new Intl.DateTimeFormat('es-HN', {
         day: 'numeric',
