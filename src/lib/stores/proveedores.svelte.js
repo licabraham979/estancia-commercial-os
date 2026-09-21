@@ -4,6 +4,7 @@ import { supabase } from '$lib/supabase/client';
  * @typedef {Object} Proveedor
  * @property {string} id
  * @property {string} nombre
+ * @property {string|null} contacto
  * @property {string|null} telefono
  * @property {string|null} whatsapp
  * @property {string|null} email
@@ -77,6 +78,7 @@ export async function crearProveedor(datos) {
 		.from('proveedores')
 		.insert({
 			nombre: datos.nombre.trim(),
+			contacto: datos.contacto?.trim() || null,
 			telefono: datos.telefono?.trim() || null,
 			whatsapp: datos.whatsapp?.trim() || null,
 			email: datos.email?.trim() || null,

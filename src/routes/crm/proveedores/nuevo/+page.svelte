@@ -4,6 +4,7 @@
 	import { crearProveedor } from '$lib/stores/proveedores.svelte.js';
 
 	let nombre = $state('');
+	let contacto = $state('');
 	let telefono = $state('');
 	let whatsapp = $state('');
 	let email = $state('');
@@ -27,6 +28,7 @@
 
 		crearProveedor({
 			nombre,
+			contacto,
 			telefono,
 			whatsapp,
 			email,
@@ -90,7 +92,7 @@
 
 				<label>
 					<span>Contacto</span>
-					<input bind:value={direccion} placeholder="Dirección">
+					<input bind:value={contacto} placeholder="Nombre de contacto">
 				</label>
 
 				<label>

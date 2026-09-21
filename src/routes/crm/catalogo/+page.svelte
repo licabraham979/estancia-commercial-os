@@ -49,6 +49,9 @@ async function desactivarArticulo(articulo) {
 
 	let articulos = $derived(data.articulos ?? []);
 	let categorias = $derived(data.categorias ?? []);
+	let proveedores = $derived(data.proveedores ?? []);
+	console.log('DATA CATALOGO EN CLIENTE:', data);
+console.log('CATEGORIAS EN CLIENTE:', data.categorias);
 	
 	let articulosFiltrados = $derived(
 		articulos.filter((articulo) => {
@@ -152,7 +155,7 @@ function resumenVariante(variante) {
 					<option value="todas">
 						Todas las categorías
 					</option>
-
+					
 					{#each categorias as categoria}
 
 						<option value={categoria.id}>
@@ -334,25 +337,160 @@ function resumenVariante(variante) {
 {:else if pestaña === 'proveedores'}
 
 	<Card>
+	<div class="p-5 space-y-5">
 
-		<div class="p-10 text-center">
+		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+
+			<div>
+				<h2 class="text-2xl font-bold">
+					Proveedores
+				</h2>
+
+				<p class="text-sm text-gray-500 mt-1">
+					Proveedores registrados y relacionados con tu catálogo.
+				</p>
+			</div>
+
+			<a
+				class="btn btn-primary"
+				href="/crm/proveedores/nuevo"
+			>
+				+ Nuevo proveedor
+			</a>
+
+		</div>
+
+		<div class="text-sm text-gray-500">
+			{proveedores.length}
+			{proveedores.length === 1 ? ' proveedor' : ' proveedores'}
+		</div>
+
+	</div>
+</Card>
+
+
+{#if proveedores.length === 0}
+
+	<Card>
+
+		<div class="p-12 text-center">
 
 			<div class="text-5xl mb-4">
 				🏢
 			</div>
 
 			<h2 class="text-xl font-bold">
-				Proveedores
+				No hay proveedores
 			</h2>
 
 			<p class="text-gray-500 mt-2">
-				El módulo de proveedores se conectará al catálogo maestro.
+				Agrega tu primer proveedor para relacionarlo con los productos del catálogo.
 			</p>
+
+			<a
+				class="btn btn-primary mt-5"
+				href="/crm/proveedores/nuevo"
+			>
+				+ Agregar proveedor
+			</a>
 
 		</div>
 
 	</Card>
 
+{:else}
+
+	<div class="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+
+		{#each proveedores as proveedor}
+
+			<Card>
+
+				<div class="p-6 space-y-4">
+
+					<div class="flex items-start justify-between gap-3">
+
+						<div>
+
+							<div class="text-3xl mb-2">
+								🏢
+							</div>
+
+							<h3 class="text-xl font-bold">
+								{proveedor.nombre}
+							</h3>
+
+						</div>
+
+						{#if proveedor.categoria}
+
+							<span class="badge badge-outline">
+								{proveedor.categoria}
+							</span>
+
+						{/if}
+
+					</div>
+
+
+					<div class="space-y-2 text-sm text-gray-600">
+
+						{#if proveedor.telefono}
+
+							<div>
+								📞 {proveedor.telefono}
+							</div>
+
+						{/if}
+
+						{#if proveedor.whatsapp}
+
+							<div>
+								💬 {proveedor.whatsapp}
+							</div>
+
+						{/if}
+
+						{#if proveedor.email}
+
+							<div class="truncate">
+								✉️ {proveedor.email}
+							</div>
+
+						{/if}
+
+					</div>
+
+
+					<div class="border-t pt-4">
+
+						<div class="text-sm text-gray-500">
+							Productos relacionados
+						</div>
+
+						<div class="text-lg font-bold">
+							Próximamente
+						</div>
+
+					</div>
+
+
+					<a
+						class="btn btn-outline w-full"
+						href={`/crm/proveedores/${proveedor.id}`}
+					>
+						Ver proveedor
+					</a>
+
+				</div>
+
+			</Card>
+
+		{/each}
+
+	</div>
+
+{/if}
 
 {:else}
 
@@ -409,14 +547,15 @@ function resumenVariante(variante) {
 			<div class="p-6">
 
 				<ArticuloForm
-					categorias={categorias}
-					articulo={articuloSeleccionado}
-					onGuardar={() => {
-						cerrarFormularioArticulo();
-						location.reload();
-					}}
-					onCancelar={cerrarFormularioArticulo}
-				/>
+	categorias={categorias}
+	proveedores={proveedores}
+	articulo={articuloSeleccionado}
+	onGuardar={() => {
+		cerrarFormularioArticulo();
+		location.reload();
+	}}
+	onCancelar={cerrarFormularioArticulo}
+/>
 
 			</div>
 

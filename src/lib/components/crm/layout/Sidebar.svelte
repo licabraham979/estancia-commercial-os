@@ -39,6 +39,15 @@
 			ruta: '/crm/recibos'
 		},
 		{
+			nombre: 'Reportes',
+			ruta: '/crm/reportes'
+		},
+		{
+			nombre: 'Dirección para mis clientes — reportes',
+			ruta: '/portal'
+		},
+		
+		{
 			nombre: 'Nuevo Cliente',
 			ruta: '/crm/clientes/nuevo'
 		}

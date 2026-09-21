@@ -58,31 +58,40 @@ export async function obtenerVariantes(articuloId) {
  */
 export async function obtenerCatalogoCompleto() {
 	const { data, error } = await supabaseServer
-	.from('catalogo_articulos')
-	.select(`
-		id,
-		nombre,
-		descripcion,
-		tipo,
-		categoria_id,
-		categoria:catalogo_categorias(
-			id,
-			nombre
-		),
-		variantes:catalogo_variantes(
+		.from('catalogo_articulos')
+		.select(`
 			id,
 			nombre,
 			descripcion,
-			unidad,
-			ancho,
-			alto,
-			unidad_medida,
-			atributos,
-			activo
-		)
-	`)
-	.eq('activo', true)
-	.order('nombre');
+			tipo,
+			categoria_id,
+			categoria:catalogo_categorias(
+				id,
+				nombre
+			),
+			variantes:catalogo_variantes(
+	id,
+	nombre,
+	descripcion,
+	unidad,
+	ancho,
+	alto,
+	unidad_medida,
+	precio,
+	atributos,
+	activo,
+	proveedores:catalogo_proveedor_variantes(
+		id,
+		proveedor_id,
+		precio_compra,
+		moneda,
+		notas,
+		activo
+	)
+)
+		`)
+		.eq('activo', true)
+		.order('nombre');
 
 	if (error) throw error;
 

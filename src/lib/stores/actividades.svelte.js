@@ -245,6 +245,22 @@ completarActividad(id){
 
 }
 
+eliminarActividad(
+    /** @type {number|string} */ id
+){
+
+    const indice = this.actividades.findIndex(
+        item => item.id === id
+    );
+
+    if(indice === -1) return;
+
+    this.actividades.splice(indice, 1);
+
+    this.guardar();
+
+}
+
 get actividadesPorCategoria(){
 
     return this.categorias.map(categoria => ({
@@ -264,7 +280,7 @@ get actividadesPorCategoria(){
 
 crearActividadCliente(
     /** @type {string} */ titulo,
-    /** @type {number|string} */ clienteId,
+   /** @type {number|string|null} */ clienteId,
     /** @type {number} */ categoriaId = 1
 ){
 
@@ -307,6 +323,68 @@ crearActividadCliente(
 
     this.guardar();
 
+}
+
+crearSeguimiento(
+    /** @type {string} */ titulo,
+    /** @type {number|string|null} */ clienteId,
+    /** @type {string} */ fechaObjetivo,
+    /** @type {number|string|null} */ referencia = null
+){
+
+    this.actividades.unshift({
+
+        id: Date.now(),
+
+        clienteId,
+
+        campanaId:null,
+
+        titulo,
+
+        descripcion:'',
+
+        tipo:'seguimiento',
+
+        categoriaId:1,
+
+        prioridad:'media',
+
+        estado:'pendiente',
+
+        responsable:'usuario',
+
+        origen:'reporte',
+
+        referencia,
+
+        fecha:new Date().toISOString(),
+
+        fechaCreacion:new Date().toISOString(),
+
+        fechaObjetivo,
+
+        fechaCompletada:null
+
+    });
+
+    this.guardar();
+
+}
+
+cambiarFechaObjetivo(
+    /** @type {number|string} */ id,
+    /** @type {string} */ fechaObjetivo
+){
+    const actividad = this.actividades.find(
+        item => String(item.id) === String(id)
+    );
+
+    if(!actividad) return;
+
+    actividad.fechaObjetivo = fechaObjetivo;
+
+    this.guardar();
 }
 
 registrarActividadCliente(){

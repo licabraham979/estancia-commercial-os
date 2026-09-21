@@ -289,6 +289,14 @@
 
 		<div class="datos">
 
+			{#if proveedor.contacto}
+		<div>
+			<span>Contacto</span>
+			<strong>{proveedor.contacto}</strong>
+		</div>
+	{/if}
+
+
 			{#if proveedor.telefono}
 				<div>
 					<span>Teléfono</span>

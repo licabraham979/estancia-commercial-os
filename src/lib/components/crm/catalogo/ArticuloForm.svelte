@@ -1,7 +1,13 @@
 <script>
 	import { supabase } from '$lib/supabase/client';
 
-	let { categorias = [], articulo = null, onGuardar, onCancelar } = $props();
+	let {
+	categorias = [],
+	proveedores = [],
+	articulo = null,
+	onGuardar,
+	onCancelar
+} = $props();
 
 	let nombre = $state(articulo?.nombre ?? '');
 	let descripcion = $state(articulo?.descripcion ?? '');
@@ -9,20 +15,29 @@
 	let categoriaId = $state(articulo?.categoria_id ?? '');
 
 	let variantes = $state(
-		articulo?.variantes?.map(/** @param {any} v */ (v) => ({
-			id: v.id,
-			nombre: v.nombre,
-			descripcion: v.descripcion ?? '',
-			unidad: v.unidad,
-			ancho: v.ancho ?? '',
-			alto: v.alto ?? '',
-			unidad_medida: v.unidad_medida ?? '',
-			atributosTexto: v.atributos
-				? JSON.stringify(v.atributos)
-				: '{}'
-		})) ?? []
-	);
+	articulo?.variantes?.map(/** @param {any} v */ (v) => ({
+		id: v.id,
+		nombre: v.nombre,
+		descripcion: v.descripcion ?? '',
+		unidad: v.unidad,
+		ancho: v.ancho ?? '',
+		alto: v.alto ?? '',
+		unidad_medida: v.unidad_medida ?? '',
+		precio: v.precio ?? 0,
 
+		proveedores: v.proveedores?.map(/** @param {any} r */ (r) => ({
+			id: r.id,
+			proveedor_id: r.proveedor_id,
+			precio_compra: r.precio_compra ?? 0,
+			moneda: r.moneda ?? 'HNL',
+			notas: r.notas ?? ''
+		})) ?? [],
+
+		atributosTexto: v.atributos
+			? JSON.stringify(v.atributos)
+			: '{}'
+	})) ?? []
+);
 	let guardando = $state(false);
 	let error = $state('');
 
@@ -34,6 +49,8 @@
 			ancho: '',
 			alto: '',
 			unidad_medida: '',
+			precio: 0,
+			proveedores: [],
 			atributosTexto: '{}'
 		});
 	}
@@ -99,124 +116,215 @@ function convertirAtributos(texto) {
 	}
 }
 
-	async function guardar() {
-		error = '';
+function agregarProveedor(/** @type {any} */ variante) {
+	variante.proveedores ??= [];
 
-		if (!nombre.trim()) {
-			error = 'El nombre del artículo es obligatorio.';
+	variante.proveedores.push({
+		id: null,
+		proveedor_id: '',
+		precio_compra: 0,
+		moneda: 'HNL',
+		notas: ''
+	});
+}
+
+function quitarProveedor(
+	/** @type {any} */ variante,
+	/** @type {number} */ index
+) {
+	variante.proveedores.splice(index, 1);
+}
+
+	async function guardar() {
+	error = '';
+
+	if (!nombre.trim()) {
+		error = 'El nombre del artículo es obligatorio.';
+		return;
+	}
+
+	if (!tipo) {
+		error = 'Selecciona el tipo de artículo.';
+		return;
+	}
+
+	for (const variante of variantes) {
+		if (!variante.nombre.trim()) {
+			error = 'Todas las variantes deben tener nombre.';
 			return;
 		}
 
-		if (!tipo) {
-			error = 'Selecciona el tipo de artículo.';
+		if (!variante.unidad.trim()) {
+			error = 'Todas las variantes deben tener unidad.';
 			return;
+		}
+
+		const proveedoresSeleccionados =
+			(variante.proveedores ?? []).filter(
+	/** @param {any} r */ (r) => r.proveedor_id
+);
+
+		const proveedoresIds =
+			proveedoresSeleccionados.map(
+	/** @param {any} r */ (r) => r.proveedor_id
+);
+
+		if (
+			new Set(proveedoresIds).size !==
+			proveedoresIds.length
+		) {
+			error =
+				`La variante "${variante.nombre}" tiene el mismo proveedor más de una vez.`;
+			return;
+		}
+
+		if (
+			(variante.proveedores ?? []).some(
+				/** @param {any} r */ (r) =>
+					!r.proveedor_id &&
+					(r.precio_compra > 0 ||
+						r.notas?.trim())
+			)
+		) {
+			error =
+				`Completa el proveedor de la variante "${variante.nombre}".`;
+			return;
+		}
+	}
+
+	guardando = true;
+
+	try {
+		let articuloId = articulo?.id;
+
+		const datosArticulo = {
+			nombre: nombre.trim(),
+			descripcion: descripcion.trim() || null,
+			tipo,
+			categoria_id: categoriaId || null,
+			activo: true
+		};
+
+		if (articuloId) {
+			const { error: errorArticulo } = await supabase
+				.from('catalogo_articulos')
+				.update(datosArticulo)
+				.eq('id', articuloId);
+
+			if (errorArticulo) throw errorArticulo;
+		} else {
+			const { data, error: errorArticulo } = await supabase
+				.from('catalogo_articulos')
+				.insert(datosArticulo)
+				.select('id')
+				.single();
+
+			if (errorArticulo) throw errorArticulo;
+
+			articuloId = data.id;
 		}
 
 		for (const variante of variantes) {
-			if (!variante.nombre.trim()) {
-				error = 'Todas las variantes deben tener nombre.';
+			const atributos = convertirAtributos(
+				variante.atributosTexto
+			);
+
+			if (atributos === null) {
+				error =
+					`La variante "${variante.nombre || 'sin nombre'}" tiene atributos JSON inválidos.`;
 				return;
 			}
 
-			if (!variante.unidad.trim()) {
-				error = 'Todas las variantes deben tener unidad.';
-				return;
-			}
-		}
-
-		guardando = true;
-
-		try {
-			let articuloId = articulo?.id;
-
-			const datosArticulo = {
-				nombre: nombre.trim(),
-				descripcion: descripcion.trim() || null,
-				tipo,
-				categoria_id: categoriaId || null,
+			const datosVariante = {
+				articulo_id: articuloId,
+				nombre: variante.nombre.trim(),
+				descripcion:
+					variante.descripcion.trim() || null,
+				unidad: variante.unidad.trim(),
+				ancho:
+					variante.ancho === ''
+						? null
+						: Number(variante.ancho),
+				alto:
+					variante.alto === ''
+						? null
+						: Number(variante.alto),
+				unidad_medida:
+					variante.unidad_medida.trim() || null,
+				precio: Number(variante.precio) || 0,
+				atributos,
 				activo: true
 			};
 
-			if (articuloId) {
-				const { error: errorArticulo } = await supabase
-					.from('catalogo_articulos')
-					.update(datosArticulo)
-					.eq('id', articuloId);
+			let varianteId = variante.id;
 
-				if (errorArticulo) throw errorArticulo;
+			if (varianteId) {
+				const { error: errorVariante } =
+					await supabase
+						.from('catalogo_variantes')
+						.update(datosVariante)
+						.eq('id', varianteId);
+
+				if (errorVariante) throw errorVariante;
 			} else {
-				const { data, error: errorArticulo } = await supabase
-					.from('catalogo_articulos')
-					.insert(datosArticulo)
-					.select('id')
-					.single();
+				const { data: nuevaVariante, error: errorVariante } =
+					await supabase
+						.from('catalogo_variantes')
+						.insert(datosVariante)
+						.select('id')
+						.single();
 
-				if (errorArticulo) throw errorArticulo;
+				if (errorVariante) throw errorVariante;
 
-				articuloId = data.id;
+				varianteId = nuevaVariante.id;
+				variante.id = varianteId;
 			}
 
-			if (variantes.length > 0) {
-				for (const variante of variantes) {
-					const atributos = convertirAtributos(
-    variante.atributosTexto
-);
+			// Reemplazamos las relaciones de proveedores
+			// de esta variante por las actuales del formulario.
+			const { error: errorEliminar } = await supabase
+				.from('catalogo_proveedor_variantes')
+				.delete()
+				.eq('variante_id', varianteId);
 
-if (atributos === null) {
-    error =
-        `La variante "${variante.nombre || 'sin nombre'}" tiene atributos JSON inválidos.`;
-    return;
-}
+			if (errorEliminar) throw errorEliminar;
 
-const datosVariante = {
-    articulo_id: articuloId,
-    nombre: variante.nombre.trim(),
-    descripcion:
-        variante.descripcion.trim() || null,
-    unidad: variante.unidad.trim(),
-    ancho:
-        variante.ancho === ''
-            ? null
-            : Number(variante.ancho),
-    alto:
-        variante.alto === ''
-            ? null
-            : Number(variante.alto),
-    unidad_medida:
-        variante.unidad_medida.trim() || null,
-    atributos,
-    activo: true
-};
+			const relaciones = (variante.proveedores ?? [])
+				.filter(
+		/** @param {any} r */ (r) => r.proveedor_id
+	)
+	.map(
+		/** @param {any} r */ (r) => ({
+					variante_id: varianteId,
+					proveedor_id: r.proveedor_id,
+					precio_compra:
+						Number(r.precio_compra) || 0,
+					moneda: r.moneda || 'HNL',
+					notas: r.notas?.trim() || null,
+					activo: true
+				})
+	);
 
-					if (variante.id) {
-						const { error: errorVariante } =
-							await supabase
-								.from('catalogo_variantes')
-								.update(datosVariante)
-								.eq('id', variante.id);
+			if (relaciones.length > 0) {
+				const { error: errorRelaciones } =
+					await supabase
+						.from('catalogo_proveedor_variantes')
+						.insert(relaciones);
 
-						if (errorVariante) throw errorVariante;
-					} else {
-						const { error: errorVariante } =
-							await supabase
-								.from('catalogo_variantes')
-								.insert(datosVariante);
-
-						if (errorVariante) throw errorVariante;
-					}
-				}
+				if (errorRelaciones) throw errorRelaciones;
 			}
-
-			onGuardar?.();
-		} catch (/** @type {any} */ e) {
-			console.error(e);
-			error =
-				e?.message ??
-				'No fue posible guardar el artículo.';
-		} finally {
-			guardando = false;
 		}
+
+		onGuardar?.();
+	} catch (/** @type {any} */ e) {
+		console.error(e);
+		error =
+			e?.message ??
+			'No fue posible guardar el artículo.';
+	} finally {
+		guardando = false;
 	}
+}
 </script>
 
 <div class="space-y-6">
@@ -406,6 +514,15 @@ const datosVariante = {
 
 							<input
 								class="input input-bordered"
+								type="number"
+								step="0.01"
+								min="0"
+								placeholder="Precio"
+								bind:value={variante.precio}
+							/>
+
+							<input
+								class="input input-bordered"
 								placeholder="Descripción"
 								bind:value={variante.descripcion}
 							/>
@@ -418,6 +535,105 @@ const datosVariante = {
 							placeholder="Atributos JSON. Ejemplo: color=blanco, acabado=brillante"
 							bind:value={variante.atributosTexto}
 						></textarea>
+
+<div class="border-t pt-4 space-y-3">
+
+	<div class="flex justify-between items-center">
+
+		<div>
+			<h5 class="font-semibold">Proveedores</h5>
+			<p class="text-sm text-gray-500">
+				Costo de compra de esta variante.
+			</p>
+		</div>
+
+		<button
+			class="btn btn-sm btn-outline"
+			type="button"
+			onclick={() => agregarProveedor(variante)}
+		>
+			+ Agregar proveedor
+		</button>
+
+	</div>
+
+	{#each variante.proveedores as relacion, proveedorIndex}
+
+		<div class="grid md:grid-cols-4 gap-3 items-end">
+
+			<div>
+				<label class="label">
+					<span class="label-text">Proveedor</span>
+				</label>
+
+				<select
+					class="select select-bordered w-full"
+					bind:value={relacion.proveedor_id}
+				>
+					<option value="">Seleccionar proveedor</option>
+
+					{#each proveedores as proveedor}
+						<option value={proveedor.id}>
+							{proveedor.nombre}
+						</option>
+					{/each}
+				</select>
+			</div>
+
+			<div>
+				<label class="label">
+					<span class="label-text">Precio de compra</span>
+				</label>
+
+				<input
+					class="input input-bordered w-full"
+					type="number"
+					step="0.01"
+					min="0"
+					placeholder="0.00"
+					bind:value={relacion.precio_compra}
+				/>
+			</div>
+
+			<div>
+				<label class="label">
+					<span class="label-text">Moneda</span>
+				</label>
+
+				<select
+					class="select select-bordered w-full"
+					bind:value={relacion.moneda}
+				>
+					<option value="HNL">HNL</option>
+					<option value="USD">USD</option>
+					<option value="MXN">MXN</option>
+				</select>
+			</div>
+
+			<div class="flex gap-2">
+
+				<input
+					class="input input-bordered w-full"
+					placeholder="Notas de compra"
+					bind:value={relacion.notas}
+				/>
+
+				<button
+					class="btn btn-error btn-outline"
+					type="button"
+					onclick={() => quitarProveedor(variante, proveedorIndex)}
+					aria-label="Quitar proveedor"
+				>
+					×
+				</button>
+
+			</div>
+
+		</div>
+
+	{/each}
+
+</div>
 
 					</div>
 

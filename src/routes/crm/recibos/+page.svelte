@@ -4,6 +4,8 @@
 	let recibos = $derived(data?.recibos ?? []);
 	let error = $derived(data?.error ?? '');
 
+	
+
 	function nuevoRecibo() {
 		window.location.href = '/crm/recibos/nuevo';
 	}
