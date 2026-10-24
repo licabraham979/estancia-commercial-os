@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Portafolio de oportunidades inmobiliarias — Estancia Comercial</title>
+  <meta name="description" content="Selección de propiedades para inversión en La Ceiba, Honduras, presentada por Estancia Comercial.">
+  <!-- Portafolio privado: no debe aparecer en buscadores -->
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <meta name="theme-color" content="#162439">
+  <meta name="color-scheme" content="light">
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+
+  <!-- Tipografía de marca (Anton) para títulos y cifras. El cuerpo usa la fuente del sistema para cargar rápido. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&display=swap">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="preload" href="data/propiedades.json" as="fetch" crossorigin>
+</head>
+<body>
+  <a class="saltar" href="#contenido">Saltar al contenido</a>
+
+  <div id="aviso-demo" class="aviso-demo" role="note" hidden>
+    Versión demostrativa: los datos, precios y fotografías son de ejemplo y no corresponden a inmuebles reales.
+  </div>
+
+  <header class="encabezado" id="inicio">
+    <div class="contenedor">
+      <p class="marca" id="marca"></p>
+      <h1 id="titulo">Portafolio de oportunidades inmobiliarias</h1>
+      <p class="subtitulo" id="subtitulo"></p>
+      <div class="filete" aria-hidden="true"><span></span><i></i><span></span></div>
+      <p class="intro" id="introduccion"></p>
+      <p class="actualizado">Actualizado: <time id="fecha" datetime=""></time></p>
+    </div>
+  </header>
+
+  <main id="contenido" tabindex="-1">
+    <!-- Vista de portafolio -->
+    <div id="vista-lista">
+      <section class="resumen" aria-labelledby="t-resumen">
+        <div class="contenedor">
+          <h2 id="t-resumen" class="titulo-seccion">Resumen de oportunidades</h2>
+          <dl class="indicadores" id="indicadores"></dl>
+        </div>
+      </section>
+
+      <section class="catalogo" aria-labelledby="t-catalogo">
+        <div class="contenedor">
+          <h2 id="t-catalogo" class="titulo-seccion">Catálogo de propiedades</h2>
+
+          <form class="filtros" id="filtros" aria-label="Filtros del catálogo" novalidate>
+            <div class="campo">
+              <label for="f-tipo">Tipo de inmueble</label>
+              <select id="f-tipo"><option value="">Todos</option></select>
+            </div>
+            <div class="campo">
+              <label for="f-estado">Estado</label>
+              <select id="f-estado"><option value="">Todos</option></select>
+            </div>
+            <fieldset class="campo campo-precio">
+              <legend>Precio</legend>
+              <div class="fila-precio">
+                <div id="campo-moneda" class="mini" hidden>
+                  <label for="f-moneda">Moneda</label>
+                  <select id="f-moneda"></select>
+                </div>
+                <div class="mini">
+                  <label for="f-min">Mínimo</label>
+                  <input id="f-min" type="number" inputmode="numeric" min="0" step="any" placeholder="Sin mínimo">
+                </div>
+                <div class="mini">
+                  <label for="f-max">Máximo</label>
+                  <input id="f-max" type="number" inputmode="numeric" min="0" step="any" placeholder="Sin máximo">
+                </div>
+              </div>
+            </fieldset>
+            <button type="button" class="btn btn-texto" id="f-limpiar">Limpiar filtros</button>
+          </form>
+
+          <p class="conteo" id="conteo" role="status" aria-live="polite"></p>
+          <div class="rejilla" id="rejilla"></div>
+        </div>
+      </section>
+
+      <section class="comparacion" id="comparar" aria-labelledby="t-comparar" tabindex="-1">
+        <div class="contenedor">
+          <h2 id="t-comparar" class="titulo-seccion">Comparación de propiedades</h2>
+          <div id="comparar-contenido"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Vista de ficha detallada -->
+    <div id="vista-ficha" hidden></div>
+  </main>
+
+  <footer class="contacto" id="contacto">
+    <div class="contenedor">
+      <h2 class="titulo-seccion claro">Contacto</h2>
+      <p class="contacto-marca" id="contacto-marca"></p>
+      <p class="contacto-texto">Para ampliar la información de cualquier propiedad, escríbanos por WhatsApp.</p>
+      <a class="btn btn-wa" id="btn-wa" href="#" target="_blank" rel="noopener noreferrer">Escribir por WhatsApp</a>
+      <p class="contacto-mensaje">Mensaje sugerido: «<span id="wa-mensaje"></span>»</p>
+      <p class="contacto-nota" id="wa-nota" hidden>Pendiente: configurar el número de WhatsApp en data/config.json.</p>
+    </div>
+  </footer>
+
+  <!-- Barra de comparación (aparece al marcar propiedades) -->
+  <div class="barra-comparar" id="barra-comparar" hidden>
+    <p id="barra-texto" role="status" aria-live="polite"></p>
+    <div class="barra-acciones">
+      <a class="btn btn-claro" href="#/comparar" id="barra-ver">Ver comparación</a>
+      <button type="button" class="btn btn-texto claro" id="barra-limpiar">Quitar todas</button>
+    </div>
+  </div>
+
+  <!-- Visor ampliado de fotografías -->
+  <dialog class="visor" id="visor" aria-label="Visor de fotografías">
+    <button type="button" class="visor-cerrar" id="visor-cerrar" aria-label="Cerrar visor">×</button>
+    <button type="button" class="visor-nav visor-prev" id="visor-prev" aria-label="Fotografía anterior">‹</button>
+    <figure class="visor-fig">
+      <img id="visor-img" alt="" decoding="async">
+      <figcaption id="visor-pie"></figcaption>
+    </figure>
+    <button type="button" class="visor-nav visor-next" id="visor-next" aria-label="Fotografía siguiente">›</button>
+  </dialog>
+
+  <noscript><p class="sin-js">Esta página necesita JavaScript activado para mostrar el portafolio.</p></noscript>
+  <script src="assets/js/app.js" defer></script>
+</body>
+</html>

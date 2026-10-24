@@ -1,0 +1,51 @@
+{
+  "_ayuda": "Configuración general del portafolio. Edita solo los valores; no cambies los nombres de los campos.",
+  "modo_demo": false,
+  "_modo_demo": "true muestra un aviso visible de 'versión demostrativa'. Cámbialo a false cuando uses información real.",
+  "marca": "Estancia Comercial",
+  "logo": "",
+  "_logo": "Ruta opcional al logotipo oficial, por ejemplo assets/img/logo.svg. Si queda vacío se muestra el nombre en texto.",
+  "titulo": "Portafolio de oportunidades inmobiliarias",
+  "subtitulo": "Selección de propiedades para inversión en La Ceiba, Honduras",
+  "fecha_actualizacion": "2026-10-24",
+  "introduccion": "Este portafolio reúne propiedades en La Ceiba, Atlántida, seleccionadas por Estancia Comercial para su evaluación. Cada ficha incluye fotografías, video cuando está disponible y observaciones que separan lo que se observó en la propiedad de las posibilidades de mejora. La disponibilidad y las condiciones están sujetas a confirmación.",
+  "whatsapp": {
+    "numero": "",
+    "_numero": "Número con código de país y solo dígitos. Ejemplo de formato: 504XXXXXXXX. Déjalo vacío hasta tener el número oficial; no se inventa ninguno.",
+    "mensaje": "Hola, quisiera ampliar la información sobre las propiedades del portafolio"
+  },
+  "max_comparar": 3,
+  "estados": [
+    {
+      "id": "bueno",
+      "etiqueta": "Buen estado"
+    },
+    {
+      "id": "regular",
+      "etiqueta": "Estado regular"
+    },
+    {
+      "id": "requiere_mantenimiento",
+      "etiqueta": "Requiere mantenimiento"
+    },
+    {
+      "id": "requiere_remodelacion",
+      "etiqueta": "Requiere remodelación"
+    },
+    {
+      "id": "sin_construccion",
+      "etiqueta": "Sin construcción"
+    }
+  ],
+  "criterios_inversionista": {
+    "_demo": false,
+    "moneda": null,
+    "precio_min": null,
+    "precio_max": null,
+    "tipos": [],
+    "zonas": [],
+    "superficie_terreno_min_m2": null,
+    "superficie_construccion_min_m2": null,
+    "acepta_mantenimiento": null
+  }
+}

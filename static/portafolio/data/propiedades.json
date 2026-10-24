@@ -1,0 +1,815 @@
+{
+  "_ayuda": "Cada elemento de 'propiedades' es un inmueble. Todos los campos son opcionales excepto 'id' y 'tipo'. Un campo vacío, null o ausente simplemente no se muestra. Consulta el README para la descripción de cada campo.",
+  "_aviso_demo": "Las propiedades marcadas demo:true contienen información demostrativa. Verifica los datos de cada inmueble antes de compartir el portafolio.",
+  "propiedades": [
+    {
+      "id": "EC-001",
+      "demo": false,
+      "publicada": true,
+      "tipo": "Casa",
+      "zona": "Colonia Universidades",
+      "ciudad": "La Ceiba",
+      "precio": {
+        "monto": 1100000,
+        "moneda": "HNL"
+      },
+      "superficie": {
+        "terreno_m2": 170,
+        "construccion_m2": 150
+      },
+      "habitaciones": 3,
+      "banos": 2,
+      "estacionamientos": 1,
+      "estado": "Bueno",
+      "caracteristicas": {
+        "descripcion": "Casa de un piso, recién remodelada, con tres habitaciones, dos baños y cochera. Ubicada cerca de zonas escolares y del CURLA.",
+        "lista": [
+          "Casa de un piso",
+          "Recién remodelada",
+          "3 habitaciones",
+          "2 baños",
+          "Cochera",
+          "Cerca de zonas escolares y del CURLA"
+        ],
+        "destacadas": [
+          "Recién remodelada",
+          "Cochera",
+          "Cerca del CURLA"
+        ]
+      },
+      "galeria": {
+        "fachada": [
+          {
+            "src": "https://res.cloudinary.com/licabraham939/image/upload/v1792865104/casaColUniversidades/WhatsApp_Image_2026-10-24_at_9.47.07_AM_2_byidx0.jpg",
+            "alt": "Vista 1 de la casa en Colonia Universidades",
+            "pie": "Vista de la propiedad"
+          }
+        ],
+        "interiores": [],
+        "exteriores": [],
+        "adicionales": [
+          {
+            "src": "https://res.cloudinary.com/licabraham939/image/upload/v1792865103/casaColUniversidades/WhatsApp_Image_2026-10-24_at_9.47.07_AM_zxdts9.jpg",
+            "alt": "Vista 2 de la casa en Colonia Universidades",
+            "pie": "Vista de la propiedad"
+          },
+          {
+            "src": "https://res.cloudinary.com/licabraham939/image/upload/v1792865104/casaColUniversidades/WhatsApp_Image_2026-10-24_at_9.47.07_AM_1_yuadai.jpg",
+            "alt": "Vista 3 de la casa en Colonia Universidades",
+            "pie": "Vista de la propiedad"
+          },
+          {
+            "src": "https://res.cloudinary.com/licabraham939/image/upload/v1792865104/casaColUniversidades/WhatsApp_Image_2026-10-24_at_9.47.07_AM_3_ivh30q.jpg",
+            "alt": "Vista 4 de la casa en Colonia Universidades",
+            "pie": "Vista de la propiedad"
+          }
+        ]
+      },
+      "video": {
+        "tipo": "archivo",
+        "url": "https://res.cloudinary.com/licabraham939/video/upload/v1792865061/casaColUniversidades/WhatsApp_Video_2026-10-24_at_9.47.06_AM_ipmkmz.mp4",
+        "poster": "https://res.cloudinary.com/licabraham939/image/upload/v1792865104/casaColUniversidades/WhatsApp_Image_2026-10-24_at_9.47.07_AM_2_byidx0.jpg",
+        "titulo": "Recorrido en video de la casa"
+      },
+      "observaciones": {
+        "hechos_observados": [],
+        "mantenimiento": [],
+        "ventajas_ubicacion": [
+          "Cercanía a zonas escolares y al CURLA"
+        ],
+        "mejoras_potenciales": [],
+        "usos_posibles": [],
+        "pendientes_verificar": [],
+        "otras": []
+      },
+      "condiciones": {
+        "disponibilidad": "Consultar"
+      }
+    },
+    {
+      "id": "EC-005",
+      "demo": false,
+      "publicada": true,
+      "tipo": "Casa",
+      "zona": "CA-13, frente a la Casa del Retiro",
+      "ciudad": "La Ceiba",
+      "precio": {
+        "monto": 950000,
+        "moneda": "HNL"
+      },
+      "caracteristicas": {
+        "descripcion": "Propiedad con dos departamentos ubicada sobre la CA-13, frente a la Casa del Retiro, en La Ceiba. Cuenta con patio amplio, cochera y pasillo de acceso. Por su distribución, representa una oportunidad para generar ingresos por alquiler y evaluar futuras ampliaciones o construcciones adicionales, sujetas a revisión técnica y permisos.",
+        "lista": [
+          "Dos departamentos",
+          "Patio amplio",
+          "Cochera",
+          "Pasillo de acceso",
+          "Terreno estimado de 250 m²",
+          "Potencial de ampliación o construcción adicional"
+        ],
+        "destacadas": [
+          "Dos unidades habitacionales",
+          "Potencial de ingresos por alquiler",
+          "Ubicación sobre la CA-13"
+        ]
+      },
+      "galeria": {
+        "fachada": [
+          {
+            "src": "https://res.cloudinary.com/licabraham939/image/upload/v1792871050/casaFrenteRetiro/WhatsApp_Image_2026-10-24_at_9.52.34_AM_dzpmm7.jpg",
+            "alt": "Fachada de propiedad frente a la Casa del Retiro",
+            "pie": "Fachada de la propiedad"
+          }
+        ],
+        "interiores": [],
+        "exteriores": [
+          {
+            "src": "https://res.cloudinary.com/licabraham939/image/upload/v1792871049/casaFrenteRetiro/WhatsApp_Image_2026-10-24_at_9.52.34_AM_1_qobrzu.jpg",
+            "alt": "Vista exterior de la propiedad",
+            "pie": "Vista exterior"
+          }
+        ],
+        "adicionales": []
+      },
+      "video": {
+        "tipo": "archivo",
+        "url": "https://res.cloudinary.com/licabraham939/video/upload/v1792871049/casaFrenteRetiro/WhatsApp_Video_2026-10-24_at_9.52.35_AM_gvqd7n.mp4",
+        "poster": "https://res.cloudinary.com/licabraham939/image/upload/v1792871050/casaFrenteRetiro/WhatsApp_Image_2026-10-24_at_9.52.34_AM_dzpmm7.jpg",
+        "titulo": "Recorrido exterior de la propiedad"
+      },
+      "observaciones": {
+        "hechos_observados": [
+          "Se observan dos departamentos en la propiedad.",
+          "Cuenta con patio amplio, cochera y pasillo de acceso.",
+          "Se ubica frente a la Casa del Retiro, sobre la CA-13."
+        ],
+        "mantenimiento": [],
+        "ventajas_ubicacion": [
+          "Frente a la Casa del Retiro, sobre la CA-13"
+        ],
+        "mejoras_potenciales": [],
+        "usos_posibles": [],
+        "pendientes_verificar": [
+          "Medidas del terreno y construcción",
+          "Distribución y condiciones interiores de los dos departamentos"
+        ],
+        "otras": [],
+        "potencial_inversion": [
+          "Renta estimada por departamento: L 5,500 mensuales.",
+          "Ingreso estimado por ambos departamentos: L 11,000 mensuales.",
+          "Proyección conservadora de renta conjunta: L 10,500 mensuales.",
+          "La renta depende de la ocupación y debe validarse con el mercado.",
+          "El terreno se estima en 250 m²; requiere confirmación.",
+          "La posibilidad de construir está sujeta a evaluación técnica y permisos."
+        ]
+      },
+      "condiciones": {
+        "disponibilidad": "Consultar"
+      },
+      "superficie": {
+        "terreno": 250,
+        "unidad": "m²",
+        "estimada": true
+      },
+      "renta": {
+        "por_departamento": 5500,
+        "mensual_conservadora": 10500,
+        "mensual_estimada": 11000,
+        "moneda": "HNL",
+        "nota": "Ingreso estimado sujeto a ocupación y validación de mercado."
+      }
+    },
+    {
+      "id": "EC-006",
+      "demo": false,
+      "publicada": true,
+      "tipo": "Casa",
+      "zona": "Detrás del Colegio ITLA, cerca del campo de fútbol",
+      "ciudad": "La Ceiba",
+      "precio": {
+        "monto": 790000,
+        "moneda": "HNL"
+      },
+      "superficie": {
+        "terreno": "250 m² o más",
+        "unidad": "m²",
+        "estimada": true
+      },
+      "habitaciones": null,
+      "banos": null,
+      "estacionamientos": null,
+      "estado": "Obra gris",
+      "caracteristicas": {
+        "descripcion": "Casa de grandes dimensiones en obra gris, ubicada detrás del Colegio ITLA y cerca del campo de fútbol, en La Ceiba. Representa una oportunidad para quien busca terminar una construcción y adaptar los espacios a sus necesidades. El terreno se estima en 250 m² o más, pendiente de medición. Al completar los acabados, el comprador podría aprovechar el potencial de valorización de la propiedad; el resultado dependerá del mercado y de la inversión requerida para terminarla.",
+        "lista": [
+          "Casa amplia en obra gris",
+          "Terreno estimado de 250 m² o más",
+          "Ubicación detrás del Colegio ITLA",
+          "Cerca del campo de fútbol",
+          "Posibilidad de personalizar los acabados",
+          "Potencial de valorización sujeto a inversión y mercado"
+        ],
+        "destacadas": [
+          "Precio negociable",
+          "Construcción por terminar",
+          "Terreno amplio"
+        ]
+      },
+      "galeria": {
+        "fachada": [
+          {
+            "src": "https://res.cloudinary.com/licabraham939/image/upload/v1792872503/casaObragris/WhatsApp_Image_2026-10-24_at_9.55.11_AM_qvwtoy.jpg",
+            "alt": "Fachada de casa en obra gris",
+            "pie": "Casa en obra gris"
+          }
+        ],
+        "interiores": [],
+        "exteriores": [],
+        "adicionales": []
+      },
+      "video": {
+        "tipo": "archivo",
+        "url": "https://res.cloudinary.com/licabraham939/video/upload/v1792872503/casaObragris/WhatsApp_Video_2026-10-24_at_9.55.11_AM_1_bazeyg.mp4",
+        "poster": "https://res.cloudinary.com/licabraham939/image/upload/v1792872503/casaObragris/WhatsApp_Image_2026-10-24_at_9.55.11_AM_qvwtoy.jpg",
+        "titulo": "Recorrido de la propiedad"
+      },
+      "observaciones": {
+        "hechos_observados": [
+          "Casa de grandes dimensiones en obra gris.",
+          "La propiedad cuenta con un terreno que se estima en 250 m² o más; requiere medición.",
+          "Ubicada detrás del Colegio ITLA y cerca del campo de fútbol."
+        ],
+        "pendiente_verificar": [
+          "Medidas exactas del terreno y construcción.",
+          "Distribución de habitaciones y baños.",
+          "Costo estimado para terminar la obra."
+        ]
+      },
+      "condiciones": {
+        "disponibilidad": "Consultar",
+        "negociable": true
+      },
+      "videos_adicionales": [
+        {
+          "tipo": "archivo",
+          "url": "https://res.cloudinary.com/licabraham939/video/upload/v1792872503/casaObragris/WhatsApp_Video_2026-10-24_at_9.55.11_AM_sbtt2j.mp4",
+          "titulo": "Video adicional de la propiedad"
+        }
+      ]
+    },
+    {
+      "id": "EC-007",
+      "demo": false,
+      "publicada": true,
+      "tipo": "Terreno",
+      "zona": "Colonia 2 de Agosto, antes de llegar al portón del CURLA",
+      "ciudad": "La Ceiba",
+      "precio": {
+        "monto": 170000,
+        "moneda": "HNL"
+      },
+      "habitaciones": null,
+      "banos": null,
+      "estacionamientos": null,
+      "estado": "Disponible",
+      "caracteristicas": {
+        "descripcion": "Solar ubicado en la colonia 2 de Agosto, antes de llegar al portón del CURLA, en La Ceiba. Por su precio accesible, representa una opción para inversionistas que buscan adquirir un terreno para futura reventa o evaluar la construcción de una vivienda básica. Una vez construida, la propiedad podría destinarse al alquiler mientras se considera una venta futura. La viabilidad de construcción, los costos y la rentabilidad deben evaluarse antes de invertir.",
+        "lista": [
+          "Precio accesible de entrada",
+          "Ubicación en colonia 2 de Agosto",
+          "Cercano al portón del CURLA",
+          "Opción para futura reventa",
+          "Potencial para vivienda básica y alquiler, sujeto a evaluación"
+        ],
+        "destacadas": [
+          "Precio: L 170,000",
+          "Oportunidad económica de inversión",
+          "Potencial de desarrollo por evaluar"
+        ]
+      },
+      "galeria": {
+        "fachada": [],
+        "interiores": [],
+        "exteriores": [
+          {
+            "src": "https://res.cloudinary.com/licabraham939/image/upload/v1792873994/solar170dosdeabril/WhatsApp_Image_2026-10-24_at_9.57.14_AM_1_gaopdr.jpg",
+            "alt": "Solar en colonia 2 de Agosto, vista 1",
+            "pie": "Vista del terreno 1"
+          },
+          {
+            "src": "https://res.cloudinary.com/licabraham939/image/upload/v1792873992/solar170dosdeabril/WhatsApp_Image_2026-10-24_at_9.57.14_AM_eacatn.jpg",
+            "alt": "Solar en colonia 2 de Agosto, vista 2",
+            "pie": "Vista del terreno 2"
+          },
+          {
+            "src": "https://res.cloudinary.com/licabraham939/image/upload/v1792873991/solar170dosdeabril/WhatsApp_Image_2026-10-24_at_9.57.13_AM_2_xufls7.jpg",
+            "alt": "Solar en colonia 2 de Agosto, vista 3",
+            "pie": "Vista del terreno 3"
+          },
+          {
+            "src": "https://res.cloudinary.com/licabraham939/image/upload/v1792873990/solar170dosdeabril/WhatsApp_Image_2026-10-24_at_9.57.13_AM_1_gkllyi.jpg",
+            "alt": "Solar en colonia 2 de Agosto, vista 4",
+            "pie": "Vista del terreno 4"
+          },
+          {
+            "src": "https://res.cloudinary.com/licabraham939/image/upload/v1792873989/solar170dosdeabril/WhatsApp_Image_2026-10-24_at_9.57.13_AM_kaor4s.jpg",
+            "alt": "Solar en colonia 2 de Agosto, vista 5",
+            "pie": "Vista del terreno 5"
+          }
+        ],
+        "adicionales": []
+      },
+      "video": {},
+      "observaciones": {
+        "hechos_observados": [
+          "Se proporcionaron cinco fotografías del solar.",
+          "Ubicación indicada: colonia 2 de Agosto, antes de llegar al portón del CURLA."
+        ],
+        "pendiente_verificar": [
+          "Medidas y área total del terreno.",
+          "Situación legal y documentación.",
+          "Acceso a servicios básicos.",
+          "Uso de suelo y viabilidad para construir."
+        ],
+        "potencial_inversion": [
+          "Posibilidad de reventa futura, sujeta al mercado.",
+          "Posibilidad de evaluar una construcción básica para alquiler."
+        ]
+      },
+      "condiciones": {
+        "disponibilidad": "Consultar"
+      }
+    },
+    {
+      "id": "EC-008",
+      "demo": false,
+      "publicada": true,
+      "tipo": "Casa",
+      "zona": "Colonia 2 de Agosto, sector El Búfalo",
+      "ciudad": "La Ceiba",
+      "precio": {
+        "monto": 600000,
+        "moneda": "HNL"
+      },
+      "habitaciones": null,
+      "banos": null,
+      "estacionamientos": null,
+      "estado": "Requiere remodelación",
+      "caracteristicas": {
+        "descripcion": "Casa ubicada en la colonia 2 de Agosto, sector El Búfalo, en La Ceiba. Es una opción para quien busca adquirir una propiedad, invertir en su remodelación y destinarla al alquiler. Su precio de L 600,000 permite evaluar una estrategia de inversión que contemple el costo de compra, las mejoras necesarias y la posibilidad de conservar capital para otra propiedad, ya sea para vivienda propia o para generar ingresos por renta. La rentabilidad dependerá del estado real de la casa, el presupuesto de remodelación y la demanda de alquiler.",
+        "lista": [
+          "Ubicada en colonia 2 de Agosto, sector El Búfalo",
+          "Precio de venta de L 600,000",
+          "Potencial para remodelar y destinar al alquiler",
+          "Opción para planificar una inversión inmobiliaria escalonada"
+        ],
+        "destacadas": [
+          "Inversión de L 600,000",
+          "Potencial de renta tras remodelación",
+          "Precio negociable"
+        ]
+      },
+      "galeria": {
+        "fachada": [
+          {
+            "src": "https://res.cloudinary.com/licabraham939/image/upload/v1792874634/casa2abril600/WhatsApp_Image_2026-10-24_at_10.02.22_AM_y0d36w.jpg",
+            "alt": "Fachada de casa en colonia 2 de Agosto",
+            "pie": "Fachada de la propiedad"
+          }
+        ],
+        "interiores": [],
+        "exteriores": [
+          {
+            "src": "https://res.cloudinary.com/licabraham939/image/upload/v1792874633/casa2abril600/WhatsApp_Image_2026-10-24_at_10.02.10_AM_kfoajd.jpg",
+            "alt": "Vista adicional de la propiedad",
+            "pie": "Vista adicional"
+          }
+        ],
+        "adicionales": []
+      },
+      "video": {
+        "tipo": "archivo",
+        "url": "https://res.cloudinary.com/licabraham939/video/upload/v1792874637/casa2abril600/WhatsApp_Video_2026-10-24_at_10.02.22_AM_pyvddb.mp4",
+        "poster": "https://res.cloudinary.com/licabraham939/image/upload/v1792874634/casa2abril600/WhatsApp_Image_2026-10-24_at_10.02.22_AM_y0d36w.jpg",
+        "titulo": "Recorrido de la propiedad"
+      },
+      "observaciones": {
+        "hechos_observados": [
+          "Se proporcionaron fotografías de la fachada y una vista adicional, además de dos videos.",
+          "Ubicación indicada: colonia 2 de Agosto, sector El Búfalo.",
+          "El propietario indica que la documentación está en regla; debe verificarse antes de la compra."
+        ],
+        "potencial_inversion": [
+          "Evaluar remodelación para destinar la casa al alquiler.",
+          "Considerar el presupuesto de mejoras antes de calcular rentabilidad.",
+          "La estrategia podría permitir reservar capital para otra propiedad, según el costo final."
+        ],
+        "pendiente_verificar": [
+          "Estado estructural y trabajos de remodelación necesarios.",
+          "Medidas del terreno y construcción.",
+          "Documentación legal y costos de cierre.",
+          "Renta de mercado estimada después de remodelar."
+        ]
+      },
+      "condiciones": {
+        "disponibilidad": "Consultar",
+        "negociable": true
+      },
+      "videos_adicionales": [
+        {
+          "tipo": "archivo",
+          "url": "https://res.cloudinary.com/licabraham939/video/upload/v1792874635/casa2abril600/WhatsApp_Video_2026-10-24_at_10.02.14_AM_j05cqj.mp4",
+          "titulo": "Video adicional de la propiedad"
+        }
+      ]
+    },
+    {
+      "id": "EC-009",
+      "demo": false,
+      "publicada": true,
+      "tipo": "Casa",
+      "zona": "Colonia Marisol",
+      "ciudad": "La Ceiba",
+      "precio": {
+        "monto": 1650000,
+        "moneda": "HNL"
+      },
+      "habitaciones": null,
+      "banos": null,
+      "estacionamientos": null,
+      "estado": "Disponible",
+      "caracteristicas": {
+        "descripcion": "Propiedad en colonia Marisol, zona residencial tranquila y consolidada. Cuenta con cuatro departamentos distribuidos en dos niveles, cochera amplia y potencial para desarrollar un edificio de departamentos, sujeto a las dimensiones del terreno, normativa aplicable y permisos de construcción.",
+        "lista": [
+          "2 departamentos en planta baja",
+          "2 departamentos en planta alta",
+          "Cochera amplia",
+          "Posibilidad de construcción adicional",
+          "Zona residencial tranquila y consolidada",
+          "Potencial para construir un edificio de departamentos, sujeto a medidas, normativa y permisos"
+        ],
+        "destacadas": [
+          "4 departamentos",
+          "Potencial de inversión",
+          "Colonia Marisol",
+          "Potencial de desarrollo inmobiliario"
+        ]
+      },
+      "galeria": {
+        "fachada": [
+          {
+            "src": "https://res.cloudinary.com/licabraham939/image/upload/v1792875530/casamarisol/WhatsApp_Image_2026-10-24_at_12.40.16_PM_fqmeqf.jpg",
+            "alt": "Casa en colonia Marisol, fotografía 1",
+            "pie": ""
+          }
+        ],
+        "interiores": [],
+        "exteriores": [],
+        "adicionales": [
+          {
+            "src": "https://res.cloudinary.com/licabraham939/image/upload/v1792875529/casamarisol/WhatsApp_Image_2026-10-24_at_12.40.11_AM_aorkpg.jpg",
+            "alt": "Casa en colonia Marisol, fotografía 2",
+            "pie": ""
+          },
+          {
+            "src": "https://res.cloudinary.com/licabraham939/image/upload/v1792875527/casamarisol/WhatsApp_Image_2026-10-24_at_12.39.54_PM_pebxrj.jpg",
+            "alt": "Casa en colonia Marisol, fotografía 3",
+            "pie": ""
+          },
+          {
+            "src": "https://res.cloudinary.com/licabraham939/image/upload/v1792875524/casamarisol/WhatsApp_Image_2026-10-24_at_12.39.37_PM_pru5ur.jpg",
+            "alt": "Casa en colonia Marisol, fotografía 4",
+            "pie": ""
+          },
+          {
+            "src": "https://res.cloudinary.com/licabraham939/image/upload/v1792875523/casamarisol/WhatsApp_Image_2026-10-24_at_12.39.25_PM_luaz4h.jpg",
+            "alt": "Casa en colonia Marisol, fotografía 5",
+            "pie": ""
+          },
+          {
+            "src": "https://res.cloudinary.com/licabraham939/image/upload/v1792875519/casamarisol/WhatsApp_Image_2026-10-24_at_12.38.58_PM_qfgmvs.jpg",
+            "alt": "Casa en colonia Marisol, fotografía 6",
+            "pie": ""
+          },
+          {
+            "src": "https://res.cloudinary.com/licabraham939/image/upload/v1792875522/casamarisol/WhatsApp_Image_2026-10-24_at_12.39.16_PM_p6t5tb.jpg",
+            "alt": "Casa en colonia Marisol, fotografía 7",
+            "pie": ""
+          },
+          {
+            "src": "https://res.cloudinary.com/licabraham939/image/upload/v1792875517/casamarisol/WhatsApp_Image_2026-10-24_at_12.38.46_PM_lmkisv.jpg",
+            "alt": "Casa en colonia Marisol, fotografía 8",
+            "pie": ""
+          },
+          {
+            "src": "https://res.cloudinary.com/licabraham939/image/upload/v1792875515/casamarisol/WhatsApp_Image_2026-10-24_at_12.37.55_PM_w6emgu.jpg",
+            "alt": "Casa en colonia Marisol, fotografía 9",
+            "pie": ""
+          },
+          {
+            "src": "https://res.cloudinary.com/licabraham939/image/upload/v1792875516/casamarisol/WhatsApp_Image_2026-10-24_at_12.38.38_PM_ihjoj7.jpg",
+            "alt": "Casa en colonia Marisol, fotografía 10",
+            "pie": ""
+          }
+        ]
+      },
+      "video": {
+        "tipo": "archivo",
+        "url": "https://res.cloudinary.com/licabraham939/video/upload/v1792875534/casamarisol/WhatsApp_Video_2026-10-24_at_12.47.02_PM_rzmddd.mp4",
+        "poster": "https://res.cloudinary.com/licabraham939/image/upload/v1792875530/casamarisol/WhatsApp_Image_2026-10-24_at_12.40.16_PM_fqmeqf.jpg",
+        "titulo": "Recorrido de la propiedad"
+      },
+      "observaciones": {
+        "hechos_observados": [
+          "Se proporcionaron fotografías de la fachada y una vista adicional, además de dos videos.",
+          "Ubicación indicada: colonia Marisol.",
+          "El propietario indica que la documentación está en regla; debe verificarse antes de la compra."
+        ],
+        "potencial_inversion": [
+          "Evaluar remodelación para destinar la casa al alquiler.",
+          "Considerar el presupuesto de mejoras antes de calcular rentabilidad.",
+          "La estrategia podría permitir reservar capital para otra propiedad, según el costo final."
+        ],
+        "pendiente_verificar": [
+          "Estado estructural y trabajos de remodelación necesarios.",
+          "Medidas del terreno y construcción.",
+          "Documentación legal y costos de cierre.",
+          "Renta de mercado estimada después de remodelar."
+        ]
+      },
+      "condiciones": {
+        "disponibilidad": "Consultar",
+        "negociable": true
+      },
+      "videos_adicionales": [
+        {
+          "tipo": "archivo",
+          "url": "https://res.cloudinary.com/licabraham939/video/upload/v1792875533/casamarisol/WhatsApp_Video_2026-10-24_at_12.47.01_PM_dz6zbk.mp4",
+          "poster": "https://res.cloudinary.com/licabraham939/image/upload/v1792875530/casamarisol/WhatsApp_Image_2026-10-24_at_12.40.16_PM_fqmeqf.jpg",
+          "titulo": "Recorrido adicional 2"
+        },
+        {
+          "tipo": "archivo",
+          "url": "https://res.cloudinary.com/licabraham939/video/upload/v1792875532/casamarisol/WhatsApp_Video_2026-10-24_at_12.42.31_PM_i70hcp.mp4",
+          "poster": "https://res.cloudinary.com/licabraham939/image/upload/v1792875530/casamarisol/WhatsApp_Image_2026-10-24_at_12.40.16_PM_fqmeqf.jpg",
+          "titulo": "Recorrido adicional 3"
+        }
+      ],
+      "superficie": "Más de 300 m²"
+    },
+    {
+      "id": "EC-010",
+      "demo": false,
+      "publicada": true,
+      "tipo": "Casa",
+      "zona": "Colonia Yessenia Castillo",
+      "ciudad": "La Ceiba",
+      "precio": {
+        "monto": 1650000,
+        "moneda": "HNL"
+      },
+      "habitaciones": null,
+      "banos": null,
+      "estacionamientos": null,
+      "estado": "Disponible",
+      "caracteristicas": {
+        "descripcion": "Casa de un solo nivel ubicada prácticamente enfrente de otra propiedad disponible en la zona. Su precio de L 1,650,000 ofrece una referencia para comparar alternativas inmobiliarias según distribución, condiciones y características. Medidas y detalles adicionales pendientes de confirmar.",
+        "lista": [
+          "Construcción de un solo nivel",
+          "Ubicación colonia Yessenia Castillo",
+          "Precio de referencia: L 1,650,000"
+        ],
+        "destacadas": [
+          "Casa de un piso",
+          "Ubicación comparable"
+        ]
+      },
+      "galeria": {
+        "fachada": [],
+        "interiores": [],
+        "exteriores": [],
+        "adicionales": []
+      },
+      "video": {
+        "tipo": "archivo",
+        "url": "https://res.cloudinary.com/licabraham939/video/upload/v1792876215/casaYesseni/WhatsApp_Video_2026-10-24_at_1.08.00_PM_hu81fk.mp4",
+        "poster": "",
+        "titulo": "Recorrido de la propiedad"
+      },
+      "observaciones": {
+        "hechos_observados": [
+          "Se proporcionaron fotografías de la fachada y una vista adicional, además de dos videos.",
+          "Ubicación indicada: colonia Yessenia Castillo.",
+          "El propietario indica que la documentación está en regla; debe verificarse antes de la compra."
+        ],
+        "potencial_inversion": [
+          "Evaluar remodelación para destinar la casa al alquiler.",
+          "Considerar el presupuesto de mejoras antes de calcular rentabilidad.",
+          "La estrategia podría permitir reservar capital para otra propiedad, según el costo final."
+        ],
+        "pendiente_verificar": [
+          "Estado estructural y trabajos de remodelación necesarios.",
+          "Medidas del terreno y construcción.",
+          "Documentación legal y costos de cierre.",
+          "Renta de mercado estimada después de remodelar."
+        ]
+      },
+      "condiciones": {
+        "disponibilidad": "Consultar",
+        "negociable": true
+      },
+      "videos_adicionales": [],
+      "superficie": null
+    },
+    {
+      "id": "EC-002",
+      "demo": false,
+      "publicada": true,
+      "tipo": "Casa",
+      "zona": "Colonia Gracias a Dios",
+      "ciudad": "La Ceiba",
+      "precio": {
+        "monto": 750000,
+        "moneda": "HNL"
+      },
+      "habitaciones": 2,
+      "banos": 1,
+      "estacionamientos": 1,
+      "estado": "requiere_mantenimiento",
+      "caracteristicas": {
+        "descripcion": "Casa de dos habitaciones en Colonia Gracias a Dios, La Ceiba, con 150 m² de terreno, cochera techada y patio techado con potencial para instalar un taller. Tiene aproximadamente cinco años de construcción y requiere completar acabados. Se estima un potencial de renta de L 6,000 mensuales o alquiler por habitación; ingresos sujetos a confirmar según condiciones y demanda del mercado.",
+        "lista": [
+          "Dos habitaciones",
+          "150 m² de terreno",
+          "Cochera techada",
+          "Patio techado con potencial para taller",
+          "Aproximadamente cinco años de construcción",
+          "Requiere completar acabados",
+          "Renta estimada: L 6,000 mensuales o por habitación"
+        ],
+        "destacadas": [
+          "Potencial de renta",
+          "Patio techado",
+          "Precio L 750,000"
+        ]
+      },
+      "galeria": {
+        "fachada": [
+          {
+            "src": "https://res.cloudinary.com/licabraham939/image/upload/v1792878947/aestanciacomercial/casaGraciasADios/ChatGPT_Image_3_oct_2026_02_06_13_a.m._n8jzld.png",
+            "alt": "Vista de la casa en Colonia Gracias a Dios",
+            "pie": "Casa en Colonia Gracias a Dios"
+          }
+        ],
+        "interiores": [
+          {
+            "src": "https://res.cloudinary.com/licabraham939/image/upload/v1792878945/aestanciacomercial/casaGraciasADios/ChatGPT_Image_3_oct_2026_02_09_05_a.m._usm7rv.png",
+            "alt": "Interior de la casa",
+            "pie": "Espacio interior"
+          },
+          {
+            "src": "https://res.cloudinary.com/licabraham939/image/upload/v1792878943/aestanciacomercial/casaGraciasADios/ChatGPT_Image_3_oct_2026_02_09_47_a.m._cqd1fp.png",
+            "alt": "Área interior de la vivienda",
+            "pie": "Distribución interior"
+          },
+          {
+            "src": "https://res.cloudinary.com/licabraham939/image/upload/v1792878942/aestanciacomercial/casaGraciasADios/ChatGPT_Image_3_oct_2026_02_10_16_a.m._ihekj9.png",
+            "alt": "Área de la vivienda pendiente de acabados",
+            "pie": "Detalles de la vivienda"
+          }
+        ],
+        "exteriores": [
+          {
+            "src": "https://res.cloudinary.com/licabraham939/image/upload/v1792878940/aestanciacomercial/casaGraciasADios/ChatGPT_Image_3_oct_2026_02_13_13_a.m._uryekt.png",
+            "alt": "Patio techado de la propiedad",
+            "pie": "Patio techado con potencial para taller"
+          },
+          {
+            "src": "https://res.cloudinary.com/licabraham939/image/upload/v1792878938/aestanciacomercial/casaGraciasADios/ChatGPT_Image_3_oct_2026_02_14_38_a.m._wt0vi5.png",
+            "alt": "Espacio adicional de la propiedad",
+            "pie": "Área adicional"
+          }
+        ],
+        "adicionales": []
+      },
+      "video": {
+        "tipo": "",
+        "url": "",
+        "poster": "",
+        "titulo": ""
+      },
+      "observaciones": {
+        "hechos_observados": [
+          "Se proporcionaron fotografías de la fachada y una vista adicional, además de dos videos.",
+          "Ubicación indicada: colonia Marisol.",
+          "El propietario indica que la documentación está en regla; debe verificarse antes de la compra."
+        ],
+        "potencial_inversion": [
+          "Evaluar remodelación para destinar la casa al alquiler.",
+          "Considerar el presupuesto de mejoras antes de calcular rentabilidad.",
+          "La estrategia podría permitir reservar capital para otra propiedad, según el costo final."
+        ],
+        "pendiente_verificar": [
+          "Estado estructural y trabajos de remodelación necesarios.",
+          "Medidas del terreno y construcción.",
+          "Documentación legal y costos de cierre.",
+          "Renta de mercado estimada después de remodelar."
+        ]
+      },
+      "condiciones": {
+        "disponibilidad": "Consultar",
+        "negociable": true
+      },
+      "videos_adicionales": [],
+      "superficie": "150 m² de terreno"
+    },
+    {
+      "id": "EC-011",
+      "demo": false,
+      "publicada": true,
+      "tipo": "Casa",
+      "zona": "Colonia Yessenia Castillo",
+      "ciudad": "La Ceiba",
+      "precio": {
+        "monto": 1200000,
+        "moneda": "HNL"
+      },
+      "habitaciones": 3,
+      "banos": 2,
+      "estacionamientos": 1,
+      "estado": "requiere_mantenimiento",
+      "caracteristicas": {
+        "descripcion": "Propiedad de inversión en Colonia Yessenia Castillo, La Ceiba. En planta baja cuenta con tres habitaciones, sala, cocina, cochera techada y patio trasero amplio con dos pilas. En la planta alta dispone de dos departamentos con baño, actualmente habitables y ocupados por inquilinos. Requiere acabados y mantenimiento. Combina vivienda e ingresos por alquiler; las rentas y condiciones de ocupación deben confirmarse.",
+        "lista": [
+          "Planta baja con tres habitaciones",
+          "Sala y cocina",
+          "Cochera techada",
+          "Patio trasero amplio con dos pilas",
+          "Dos departamentos en planta alta, cada uno con baño",
+          "Departamentos habitables y actualmente rentados",
+          "Requiere acabados y mantenimiento"
+        ],
+        "destacadas": [
+          "Dos departamentos rentados",
+          "Vivienda más ingresos por alquiler",
+          "Precio L 1,200,000"
+        ]
+      },
+      "galeria": {
+        "fachada": [
+          {
+            "src": "https://res.cloudinary.com/licabraham939/image/upload/v1792878717/aestanciacomercial/CasaHenry/WhatsApp_Image_2026-09-07_at_11.13.26_AM_xf4bwv.jpg",
+            "alt": "Casa en Colonia Yessenia Castillo",
+            "pie": "Vivienda con dos departamentos en planta alta"
+          }
+        ],
+        "interiores": [],
+        "exteriores": [],
+        "adicionales": []
+      },
+      "video": {
+        "tipo": "archivo",
+        "url": "https://res.cloudinary.com/licabraham939/video/upload/v1792878874/aestanciacomercial/CasaHenry/WhatsApp_Video_2026-07-01_at_3.05.17_AM_kkgxsi.mp4",
+        "poster": "",
+        "titulo": "Recorrido de la propiedad"
+      },
+      "observaciones": {
+        "hechos_observados": [
+          "Se proporcionaron fotografías de la fachada y una vista adicional, además de dos videos.",
+          "Ubicación indicada: colonia Marisol.",
+          "El propietario indica que la documentación está en regla; debe verificarse antes de la compra."
+        ],
+        "potencial_inversion": [
+          "Evaluar remodelación para destinar la casa al alquiler.",
+          "Considerar el presupuesto de mejoras antes de calcular rentabilidad.",
+          "La estrategia podría permitir reservar capital para otra propiedad, según el costo final."
+        ],
+        "pendiente_verificar": [
+          "Estado estructural y trabajos de remodelación necesarios.",
+          "Medidas del terreno y construcción.",
+          "Documentación legal y costos de cierre.",
+          "Renta de mercado estimada después de remodelar."
+        ]
+      },
+      "condiciones": {
+        "disponibilidad": "Consultar",
+        "negociable": true
+      },
+      "videos_adicionales": [
+        {
+          "tipo": "archivo",
+          "url": "https://res.cloudinary.com/licabraham939/video/upload/v1792878871/aestanciacomercial/CasaHenry/WhatsApp_Video_2026-07-01_at_3.05.17_AM_1_ejkm3f.mp4",
+          "poster": "",
+          "titulo": "Video adicional de la propiedad"
+        },
+        {
+          "tipo": "archivo",
+          "url": "https://res.cloudinary.com/licabraham939/video/upload/v1792878870/aestanciacomercial/CasaHenry/WhatsApp_Video_2026-07-01_at_3.05.17_AM_2_xaur8b.mp4",
+          "poster": "",
+          "titulo": "Video adicional de la propiedad"
+        }
+      ],
+      "superficie": "Superficie pendiente de confirmar"
+    }
+  ]
+}

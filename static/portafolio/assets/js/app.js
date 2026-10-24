@@ -1,0 +1,900 @@
+/**
+ * Portafolio inmobiliario — Estancia Comercial
+ * ---------------------------------------------------------------------------
+ * Sin dependencias. Lee data/config.json y data/propiedades.json y construye:
+ *   1. Encabezado e indicadores de resumen (calculados desde los datos)
+ *   2. Catálogo con filtros (tipo, estado, rango de precio)
+ *   3. Ficha detallada por propiedad (ruta: #/propiedad/EC-001)
+ *   4. Galería con visor ampliado y video (YouTube o archivo)
+ *   5. Comparación de propiedades con criterios del inversionista
+ *   6. Contacto por WhatsApp
+ *
+ * Reglas de contenido:
+ *   - Un campo vacío, null o ausente NO se muestra (no hay secciones rotas).
+ *   - No se inventan precios, características ni cifras.
+ *   - Los hechos observados y las posibilidades de mejora se muestran por separado.
+ *
+ * Todo el contenido se inserta con textContent (nunca innerHTML).
+ */
+(() => {
+  'use strict';
+
+  /* ======================================================================
+   * 1. CONSTANTES Y UTILIDADES
+   * ==================================================================== */
+
+  const RUTA_CONFIG = 'data/config.json';
+  const RUTA_PROPIEDADES = 'data/propiedades.json';
+
+  /** Grupos de la galería: clave en el JSON → título visible. */
+  const GRUPOS_GALERIA = [
+    ['fachada', 'Fachada principal'],
+    ['interiores', 'Interiores'],
+    ['exteriores', 'Patio, terreno, estacionamiento y áreas complementarias'],
+    ['adicionales', 'Fotografías adicionales']
+  ];
+
+  const DISPONIBILIDAD = { disponible: 'Disponible', reservada: 'Reservada', en_negociacion: 'En negociación' };
+
+  const $ = (sel, raiz = document) => raiz.querySelector(sel);
+  const $$ = (sel, raiz = document) => Array.from(raiz.querySelectorAll(sel));
+
+  /**
+   * Crea un elemento DOM. Los hijos nulos/falsos se ignoran, lo que permite
+   * escribir h('p', {}, valor && 'texto') sin condicionales extra.
+   */
+  function h(etiqueta, atributos = {}, ...hijos) {
+    const el = document.createElement(etiqueta);
+    for (const [clave, valor] of Object.entries(atributos || {})) {
+      if (valor === null || valor === undefined || valor === false) continue;
+      if (clave === 'class') el.className = valor;
+      else if (clave === 'texto') el.textContent = valor;
+      else if (clave.startsWith('on') && typeof valor === 'function') el.addEventListener(clave.slice(2), valor);
+      else el.setAttribute(clave, valor === true ? '' : String(valor));
+    }
+    for (const hijo of hijos.flat(Infinity)) {
+      if (hijo === null || hijo === undefined || hijo === false) continue;
+      el.append(hijo instanceof Node ? hijo : document.createTextNode(String(hijo)));
+    }
+    return el;
+  }
+
+  const esNumero = (v) => typeof v === 'number' && Number.isFinite(v);
+  const hayTexto = (v) => typeof v === 'string' && v.trim() !== '';
+  const lista = (v) => (Array.isArray(v) ? v.filter((x) => x !== null && x !== undefined && String(x).trim() !== '') : []);
+  const normalizar = (s) => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+  const fmtNumero = (n) => new Intl.NumberFormat('es-HN', { maximumFractionDigits: 2 }).format(n);
+  const fmtM2 = (n) => `${fmtNumero(n)} m²`;
+
+  /** Devuelve "US$95,000" o null si no hay precio válido. */
+  function formatearPrecio(precio) {
+    if (!precio || !esNumero(precio.monto)) return null;
+    const moneda = precio.moneda || 'USD';
+    try {
+      return new Intl.NumberFormat('es-HN', { style: 'currency', currency: moneda, maximumFractionDigits: 0 }).format(precio.monto);
+    } catch (e) {
+      return `${moneda} ${fmtNumero(precio.monto)}`;
+    }
+  }
+
+  function formatearFecha(iso) {
+    if (!hayTexto(iso)) return null;
+    const fecha = new Date(`${iso}T00:00:00`);
+    if (Number.isNaN(fecha.getTime())) return iso;
+    return fecha.toLocaleDateString('es-HN', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  /**
+   * Extrae el identificador de un video de YouTube a partir de un enlace
+   * (watch, youtu.be, embed, shorts, live) o del identificador directo.
+   */
+  function parseYouTube(entrada) {
+    if (!hayTexto(entrada)) return null;
+    const texto = entrada.trim();
+    if (/^[\w-]{11}$/.test(texto)) return texto;
+    let url;
+    try { url = new URL(texto); } catch (e) { return null; }
+    const host = url.hostname.replace(/^www\.|^m\./, '');
+    let id = null;
+    if (host === 'youtu.be') id = url.pathname.split('/')[1];
+    else if (host === 'youtube.com' || host === 'youtube-nocookie.com') {
+      if (url.pathname === '/watch') id = url.searchParams.get('v');
+      else {
+        const m = url.pathname.match(/^\/(?:embed|shorts|live|v)\/([\w-]{11})/);
+        if (m) id = m[1];
+      }
+    }
+    return id && /^[\w-]{11}$/.test(id) ? id : null;
+  }
+
+  /** Acepta solo rutas relativas o http(s). Evita esquemas como javascript:. */
+  function urlSegura(valor) {
+    if (!hayTexto(valor)) return null;
+    try {
+      const url = new URL(valor, window.location.href);
+      return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : null;
+    } catch (e) { return null; }
+  }
+
+  /* ======================================================================
+   * 2. ESTADO
+   * ==================================================================== */
+
+  const app = {
+    config: {},
+    propiedades: [],
+    filtros: { tipo: '', estado: '', moneda: '', min: null, max: null },
+    comparar: new Set(),
+    scrollLista: 0,
+    vista: 'lista',
+    ultimoVisto: null
+  };
+
+  const propiedadPorId = (id) => app.propiedades.find((p) => p.id === id);
+
+  /* ======================================================================
+   * 3. CÁLCULOS SOBRE LOS DATOS
+   * ==================================================================== */
+
+  const tienePrecio = (p) => !!p.precio && esNumero(p.precio.monto);
+  const monedaDe = (p) => (tienePrecio(p) ? (p.precio.moneda || 'USD') : null);
+  const etiquetaEstado = (id) => {
+    if (!hayTexto(id)) return null;
+    const def = lista(app.config.estados).length ? app.config.estados.find((e) => e.id === id) : null;
+    return def ? def.etiqueta : id.replace(/_/g, ' ');
+  };
+  const destacadasDe = (p) => lista(p.caracteristicas && p.caracteristicas.destacadas);
+  const mantenimientoDe = (p) => lista(p.observaciones && p.observaciones.mantenimiento);
+
+  /** Requiere mantenimiento: estado marcado así, o hay trabajos de mantenimiento registrados. */
+  const requiereMantenimiento = (p) => p.estado === 'requiere_mantenimiento' || mantenimientoDe(p).length > 0;
+
+  const ubicacionDe = (p) => [p.zona, p.ciudad].filter(hayTexto).join(', ') || null;
+
+  function fotosDe(p) {
+    const grupos = [];
+    for (const [clave, titulo] of GRUPOS_GALERIA) {
+      const items = lista(p.galeria && p.galeria[clave])
+        .map((it) => (typeof it === 'string' ? { src: it } : it))
+        .filter((it) => it && hayTexto(it.src))
+        .map((it) => ({
+          src: it.src,
+          alt: it.alt || `${p.tipo} ${p.id}: ${titulo.toLowerCase()}`,
+          pie: it.pie || ''
+        }));
+      if (items.length) grupos.push({ clave, titulo, items });
+    }
+    return grupos;
+  }
+
+  function portadaDe(p) {
+    if (p.portada) {
+      const src = typeof p.portada === 'string' ? p.portada : p.portada.src;
+      if (hayTexto(src)) return { src, alt: (p.portada && p.portada.alt) || `${p.tipo} ${p.id}` };
+    }
+    const grupos = fotosDe(p);
+    return grupos.length ? grupos[0].items[0] : null;
+  }
+
+  function calcularResumen(props) {
+    const rangos = new Map();
+    const tipos = new Map();
+    for (const p of props) {
+      tipos.set(p.tipo, (tipos.get(p.tipo) || 0) + 1);
+      if (tienePrecio(p)) {
+        const m = monedaDe(p);
+        const r = rangos.get(m) || { min: Infinity, max: -Infinity };
+        r.min = Math.min(r.min, p.precio.monto);
+        r.max = Math.max(r.max, p.precio.monto);
+        rangos.set(m, r);
+      }
+    }
+    return {
+      total: props.length,
+      rangos,
+      tipos,
+      mantenimiento: props.filter(requiereMantenimiento),
+      destacadas: props.filter((p) => destacadasDe(p).length > 0),
+      sinPrecio: props.filter((p) => !tienePrecio(p)).length
+    };
+  }
+
+  /* ======================================================================
+   * 4. FILTROS
+   * ==================================================================== */
+
+  function pasaFiltros(p) {
+    const f = app.filtros;
+    if (f.tipo && p.tipo !== f.tipo) return false;
+    if (f.estado && p.estado !== f.estado) return false;
+    if (f.min !== null || f.max !== null) {
+      if (!tienePrecio(p) || monedaDe(p) !== f.moneda) return false;
+      if (f.min !== null && p.precio.monto < f.min) return false;
+      if (f.max !== null && p.precio.monto > f.max) return false;
+    }
+    return true;
+  }
+
+  function leerFiltros() {
+    const numero = (id) => {
+      const v = $(id).value.trim();
+      const n = v === '' ? null : Number(v);
+      return n !== null && Number.isFinite(n) && n >= 0 ? n : null;
+    };
+    app.filtros = {
+      tipo: $('#f-tipo').value,
+      estado: $('#f-estado').value,
+      moneda: $('#f-moneda').value,
+      min: numero('#f-min'),
+      max: numero('#f-max')
+    };
+  }
+
+  function iniciarFiltros() {
+    const props = app.propiedades;
+    const tipos = [...new Set(props.map((p) => p.tipo).filter(hayTexto))];
+    $('#f-tipo').append(...tipos.map((t) => h('option', { value: t }, t)));
+
+    const estados = [...new Set(props.map((p) => p.estado).filter(hayTexto))];
+    $('#f-estado').append(...estados.map((e) => h('option', { value: e }, etiquetaEstado(e))));
+
+    const conteoMonedas = new Map();
+    props.filter(tienePrecio).forEach((p) => conteoMonedas.set(monedaDe(p), (conteoMonedas.get(monedaDe(p)) || 0) + 1));
+    const monedas = [...conteoMonedas.entries()].sort((a, b) => b[1] - a[1]).map(([m]) => m);
+    const selMoneda = $('#f-moneda');
+    monedas.forEach((m, i) => {
+      const op = h('option', { value: m }, m);
+      if (i === 0) op.defaultSelected = true;
+      selMoneda.append(op);
+    });
+    $('#campo-moneda').hidden = monedas.length < 2;
+    if (monedas.length === 0) $('.campo-precio').hidden = true;
+
+    const form = $('#filtros');
+    const actualizar = () => { leerFiltros(); renderCatalogo(); };
+    form.addEventListener('input', actualizar);
+    form.addEventListener('change', actualizar);
+    form.addEventListener('submit', (e) => e.preventDefault());
+    // form.reset() restaura los valores de forma síncrona; después se vuelve a leer y a pintar.
+    $('#f-limpiar').addEventListener('click', () => { form.reset(); actualizar(); });
+    leerFiltros();
+  }
+
+  /* ======================================================================
+   * 5. RENDER: ENCABEZADO, RESUMEN, CONTACTO
+   * ==================================================================== */
+
+  function renderEncabezado() {
+    const c = app.config;
+    const marca = c.marca || 'Estancia Comercial';
+    $('#marca').replaceChildren(hayTexto(c.logo) ? h('img', { src: c.logo, alt: marca }) : marca);
+    $('#titulo').textContent = c.titulo || 'Portafolio de oportunidades inmobiliarias';
+    $('#subtitulo').textContent = c.subtitulo || '';
+    $('#subtitulo').hidden = !hayTexto(c.subtitulo);
+    $('#introduccion').textContent = c.introduccion || '';
+    $('#introduccion').hidden = !hayTexto(c.introduccion);
+    const fecha = formatearFecha(c.fecha_actualizacion);
+    if (fecha) { $('#fecha').textContent = fecha; $('#fecha').setAttribute('datetime', c.fecha_actualizacion); }
+    else $('.actualizado').hidden = true;
+    $('#aviso-demo').hidden = !(c.modo_demo || app.propiedades.some((p) => p.demo));
+    document.title = `${c.titulo || 'Portafolio inmobiliario'} — ${marca}`;
+  }
+
+  function renderResumen() {
+    const r = calcularResumen(app.propiedades);
+    const cont = $('#indicadores');
+    const indicador = (titulo, ...contenido) => h('div', { class: 'indicador' }, h('dt', {}, titulo), h('dd', {}, ...contenido));
+
+    const rangos = [...r.rangos.entries()].map(([moneda, { min, max }]) => {
+      const a = formatearPrecio({ monto: min, moneda });
+      const b = formatearPrecio({ monto: max, moneda });
+      return h('span', {}, min === max ? a : `${a} a ${b}`);
+    });
+
+    const items = [
+      indicador('Propiedades disponibles', h('div', { class: 'cifra' }, String(r.total)),
+        h('div', { class: 'detalle' }, 'Sujetas a confirmación de disponibilidad')),
+      rangos.length
+        ? indicador('Rango de precios', h('div', { class: 'rangos' }, rangos),
+            r.sinPrecio ? h('div', { class: 'detalle' }, `${r.sinPrecio} sin precio confirmado`) : null)
+        : null,
+      indicador('Tipos de propiedades', h('div', { class: 'rangos' },
+        [...r.tipos.entries()].map(([t, n]) => h('span', {}, `${t} (${n})`)))),
+      indicador('Requieren mantenimiento', h('div', { class: 'cifra' }, String(r.mantenimiento.length)),
+        r.mantenimiento.length ? h('div', { class: 'detalle' }, r.mantenimiento.map((p) => p.id).join(', ')) : null),
+      indicador('Destacadas por sus características', h('div', { class: 'cifra' }, String(r.destacadas.length)),
+        r.destacadas.length ? h('div', { class: 'detalle' }, r.destacadas.map((p) => p.id).join(', ')) : null)
+    ];
+    cont.replaceChildren(...items.filter(Boolean));
+  }
+
+  function renderContacto() {
+    const c = app.config;
+    const wa = c.whatsapp || {};
+    const mensaje = wa.mensaje || 'Hola, quisiera ampliar la información sobre las propiedades del portafolio';
+    const numero = String(wa.numero || '').replace(/\D/g, '');
+    $('#contacto-marca').textContent = c.marca || 'Estancia Comercial';
+    $('#wa-mensaje').textContent = mensaje;
+    $('#btn-wa').href = `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
+    if (!numero) {
+      console.warn('[Portafolio] Falta el número de WhatsApp en data/config.json (whatsapp.numero).');
+      $('#wa-nota').hidden = !c.modo_demo;
+    }
+  }
+
+  /* ======================================================================
+   * 6. RENDER: CATÁLOGO
+   * ==================================================================== */
+
+  function bloqueFoto(p, indice) {
+    const portada = portadaDe(p);
+    const marco = h('div', { class: portada ? 'tarjeta-foto' : 'tarjeta-foto sin-foto' },
+      portada
+        ? h('img', { src: portada.src, alt: portada.alt, width: 800, height: 600, decoding: 'async', loading: indice < 2 ? 'eager' : 'lazy' })
+        : h('span', {}, 'Fotografía por agregar'),
+      h('span', { class: 'ficha-id' }, p.id),
+      p.demo ? h('span', { class: 'etiqueta-demo' }, 'DEMO') : null);
+    return marco;
+  }
+
+  function tarjeta(p, indice) {
+    const precio = formatearPrecio(p.precio);
+    const sup = p.superficie || {};
+    const datos = [
+      esNumero(sup.terreno_m2) ? h('span', {}, 'Terreno: ', h('b', {}, fmtM2(sup.terreno_m2))) : null,
+      esNumero(sup.construccion_m2) ? h('span', {}, 'Construcción: ', h('b', {}, fmtM2(sup.construccion_m2))) : null
+    ].filter(Boolean);
+
+    const checkId = `cmp-${p.id}`;
+    const check = h('input', { type: 'checkbox', id: checkId, 'data-comparar': p.id });
+    check.checked = app.comparar.has(p.id);
+    check.addEventListener('change', () => alternarComparar(p.id, check.checked));
+
+    return h('article', { class: 'tarjeta', 'data-id': p.id, 'aria-label': `${p.id}, ${p.tipo}` },
+      bloqueFoto(p, indice),
+      h('div', { class: 'tarjeta-cuerpo' },
+        h('div', {},
+          h('h3', { class: 'tarjeta-tipo' }, p.tipo),
+          ubicacionDe(p) ? h('p', { class: 'tarjeta-zona' }, ubicacionDe(p)) : null),
+        precio
+          ? h('p', { class: 'precio' }, precio, ' ', h('small', {}, p.precio.moneda || ''))
+          : h('p', { class: 'precio pendiente' }, 'Precio por confirmar'),
+        datos.length ? h('p', { class: 'datos' }, datos) : null,
+        hayTexto(p.estado) ? h('p', { class: 'estado', 'data-estado': p.estado }, etiquetaEstado(p.estado)) : null,
+        h('div', { class: 'tarjeta-pie' },
+          h('a', { class: 'btn', href: `#/propiedad/${encodeURIComponent(p.id)}`, 'data-ver': p.id, 'aria-label': `Ver propiedad ${p.id}` }, 'Ver propiedad'),
+          h('label', { class: 'comparar-check', for: checkId }, check, 'Comparar'))));
+  }
+
+  function renderCatalogo() {
+    const visibles = app.propiedades.filter(pasaFiltros);
+    const total = app.propiedades.length;
+    const f = app.filtros;
+    const filtrandoPrecio = f.min !== null || f.max !== null;
+
+    let texto = visibles.length === total
+      ? `${total} ${total === 1 ? 'propiedad' : 'propiedades'}`
+      : `Mostrando ${visibles.length} de ${total} propiedades`;
+    if (filtrandoPrecio) {
+      const sinPrecio = app.propiedades.filter((p) => !tienePrecio(p)).length;
+      texto += `. El rango de precio se aplica a precios en ${f.moneda}`;
+      if (sinPrecio) texto += `; las propiedades sin precio confirmado (${sinPrecio}) no se incluyen`;
+    }
+    $('#conteo').textContent = `${texto}.`;
+
+    const rejilla = $('#rejilla');
+    if (!visibles.length) {
+      rejilla.replaceChildren(h('p', { class: 'vacio' }, 'Ninguna propiedad coincide con estos filtros. Cambia los criterios o usa «Limpiar filtros».'));
+      return;
+    }
+    rejilla.replaceChildren(...visibles.map(tarjeta));
+  }
+
+  /* ======================================================================
+   * 7. RENDER: FICHA DETALLADA
+   * ==================================================================== */
+
+  /** Pareja término/valor para listas de datos. Devuelve null si no hay valor. */
+  function dato(titulo, valor) {
+    if (valor === null || valor === undefined || valor === '') return null;
+    return h('div', {}, h('dt', {}, titulo), h('dd', {}, valor));
+  }
+
+  const vinetas = (items) => h('ul', { class: 'vinetas' }, lista(items).map((t) => h('li', {}, t)));
+
+  function bloque(titulo, ...contenido) {
+    const hijos = contenido.flat(Infinity).filter(Boolean);
+    if (!hijos.length) return null;
+    return h('section', { class: 'bloque' }, h('h3', {}, titulo), hijos);
+  }
+
+  function seccionGeneral(p) {
+    const sup = p.superficie || {};
+    const datos = [
+      dato('Identificador', p.id),
+      dato('Ubicación', ubicacionDe(p)),
+      dato('Precio solicitado', formatearPrecio(p.precio)),
+      dato('Tipo de inmueble', p.tipo),
+      dato('Superficie del terreno', esNumero(sup.terreno_m2) ? fmtM2(sup.terreno_m2) : null),
+      dato('Superficie construida', esNumero(sup.construccion_m2) ? fmtM2(sup.construccion_m2) : null),
+      dato('Habitaciones', esNumero(p.habitaciones) ? String(p.habitaciones) : null),
+      dato('Baños', esNumero(p.banos) ? String(p.banos) : null),
+      dato('Estacionamientos', esNumero(p.estacionamientos) ? String(p.estacionamientos) : null)
+    ].filter(Boolean);
+    return bloque('Información general', datos.length ? h('dl', { class: 'lista-datos' }, datos) : null);
+  }
+
+  function seccionGaleria(p) {
+    const grupos = fotosDe(p);
+    if (!grupos.length) return null;
+    const todas = grupos.flatMap((g) => g.items);
+    let contador = 0;
+    const bloquesGrupo = grupos.map((g) => h('div', { class: 'galeria-grupo' },
+      h('h4', {}, g.titulo),
+      h('div', { class: 'galeria-rejilla' }, g.items.map((foto, i) => {
+        const indice = contador++;
+        const boton = h('button', {
+          type: 'button',
+          class: g.clave === 'fachada' && i === 0 ? 'miniatura grande' : 'miniatura',
+          'aria-label': `Ampliar fotografía: ${foto.pie || foto.alt}`
+        }, h('img', { src: foto.src, alt: foto.alt, width: 400, height: 300, loading: 'lazy', decoding: 'async' }));
+        boton.addEventListener('click', () => abrirVisor(todas, indice, boton));
+        return boton;
+      }))));
+    return bloque('Galería fotográfica', bloquesGrupo);
+  }
+
+  function seccionVideo(p) {
+    const videos = [
+      ...(p.video ? [p.video] : []),
+      ...lista(p.videos_adicionales)
+    ].filter((v) => v && hayTexto(v.url));
+
+    if (!videos.length) return null;
+
+    const reproductores = videos.map((v, indice) => {
+      const titulo = hayTexto(v.titulo)
+        ? v.titulo
+        : `Recorrido de la propiedad ${indice + 1}`;
+      const idYT = v.tipo === 'archivo' ? null : parseYouTube(v.url);
+      let marco = null;
+
+      if (idYT) {
+        const poster = urlSegura(v.poster) ||
+          `https://i.ytimg.com/vi/${idYT}/hqdefault.jpg`;
+        const portada = h('button', {
+          type: 'button',
+          class: 'video-portada',
+          'aria-label': `Reproducir video: ${titulo}`
+        },
+          h('span', { class: 'play', 'aria-hidden': 'true' }),
+          h('span', { class: 'rotulo' }, titulo)
+        );
+        portada.style.backgroundImage = `url("${poster}")`;
+        marco = h('div', { class: 'video-marco' }, portada);
+
+        portada.addEventListener('click', () => {
+          const iframe = h('iframe', {
+            src: `https://www.youtube-nocookie.com/embed/${idYT}?rel=0&autoplay=1`,
+            title: titulo,
+            allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share',
+            allowfullscreen: true,
+            loading: 'lazy'
+          });
+          marco.replaceChildren(iframe);
+        });
+      } else {
+        const src = urlSegura(v.url);
+        if (!src) return null;
+
+        const poster = urlSegura(v.poster);
+        const video = h('video', {
+          controls: true,
+          preload: 'metadata',
+          playsinline: true,
+          poster: poster || null,
+          'aria-label': titulo
+        },
+          h('source', { src }),
+          'Tu navegador no puede reproducir este video.'
+        );
+        marco = h('div', { class: 'video-marco' }, video);
+      }
+
+      return marco ? h('div', { class: 'video-item' },
+        h('h4', {}, titulo),
+        marco
+      ) : null;
+    }).filter(Boolean);
+
+    return reproductores.length
+      ? bloque('Videos y recorridos', reproductores)
+      : null;
+  }
+
+  function seccionCaracteristicas(p) {
+    const c = p.caracteristicas || {};
+    const destacadas = lista(c.destacadas);
+    return bloque('Características',
+      destacadas.length ? h('div', { class: 'chips' }, destacadas.map((t) => h('span', { class: 'chip' }, t))) : null,
+      hayTexto(c.descripcion) ? h('p', {}, c.descripcion) : null,
+      lista(c.lista).length ? vinetas(c.lista) : null);
+  }
+
+  /** Subbloque de observaciones: título, nota opcional y campos con subtítulo opcional. */
+  function grupoObservaciones(clase, titulo, nota, campos, obs) {
+    const partes = campos
+      .map(([clave, subtitulo]) => {
+        const items = lista(obs[clave]);
+        if (!items.length) return null;
+        return [subtitulo ? h('h4', {}, subtitulo) : null, vinetas(items)];
+      })
+      .filter(Boolean);
+    if (!partes.length) return null;
+    return h('div', { class: `obs ${clase}` }, h('h4', { class: 'obs-titulo' }, titulo), nota ? h('p', { class: 'obs-nota' }, nota) : null, partes);
+  }
+
+  function seccionObservaciones(p) {
+    const o = p.observaciones || {};
+    return bloque('Observaciones comerciales',
+      grupoObservaciones('obs-hecho', 'Hechos observados', 'Lo que se constató en la propiedad.', [
+        ['hechos_observados', null],
+        ['mantenimiento', 'Reparaciones o mantenimiento necesario'],
+        ['ventajas_ubicacion', 'Ventajas de ubicación']
+      ], o),
+      grupoObservaciones('obs-posible', 'Posibilidades de mejora o inversión',
+        'Son posibilidades a evaluar, no hechos. No garantizan rentabilidad ni incluyen estimaciones financieras.', [
+          ['mejoras_potenciales', 'Mejoras potenciales'],
+          ['usos_posibles', 'Posibles usos residenciales o comerciales']
+        ], o),
+      grupoObservaciones('obs-verificar', 'Aspectos pendientes de verificar', null, [['pendientes_verificar', null]], o),
+      grupoObservaciones('', 'Otras observaciones', null, [['otras', null]], o));
+  }
+
+  function seccionCondiciones(p) {
+    const c = p.condiciones || {};
+    const precio = formatearPrecio(p.precio);
+    const disponibilidad = hayTexto(c.disponibilidad) ? (DISPONIBILIDAD[c.disponibilidad] || c.disponibilidad) : null;
+    const gastos = lista(c.gastos_adicionales).map((g) => (typeof g === 'string' ? { concepto: g } : g)).filter((g) => g && hayTexto(g.concepto));
+
+    const datos = [
+      dato('Precio solicitado', precio || 'Por confirmar'),
+      // La negociabilidad solo se muestra cuando está confirmada (true o false).
+      typeof c.negociable === 'boolean'
+        ? dato('Negociabilidad', c.negociable ? 'Precio negociable (confirmado)' : 'Precio no negociable (confirmado)')
+        : null,
+      dato('Disponibilidad', h('span', {}, disponibilidad || 'Por confirmar', h('small', {}, 'Sujeta a confirmación'))),
+      gastos.length
+        ? dato('Gastos adicionales', h('ul', { class: 'vinetas' }, gastos.map((g) => h('li', {}, g.concepto, hayTexto(g.detalle) ? `: ${g.detalle}` : ''))))
+        : null
+    ].filter(Boolean);
+    const sec = bloque('Condiciones', h('dl', { class: 'lista-datos' }, datos));
+    if (sec) sec.classList.add('condiciones');
+    return sec;
+  }
+
+  function construirFicha(p) {
+    const precio = formatearPrecio(p.precio);
+    const check = h('input', { type: 'checkbox', id: `cmp-ficha-${p.id}`, 'data-comparar': p.id });
+    check.checked = app.comparar.has(p.id);
+    check.addEventListener('change', () => alternarComparar(p.id, check.checked));
+
+    return h('article', { class: 'ficha', 'aria-labelledby': 'ficha-titulo' },
+      h('div', { class: 'contenedor' },
+        h('p', { class: 'ficha-volver' }, h('a', { class: 'btn btn-texto', href: '#/' }, 'Volver al catálogo')),
+        h('header', { class: 'ficha-cabecera' },
+          h('div', { class: 'fila' }, h('span', { class: 'ficha-id' }, p.id), p.demo ? h('span', { class: 'etiqueta-demo' }, 'DEMO') : null,
+            hayTexto(p.estado) ? h('span', { class: 'estado', 'data-estado': p.estado }, etiquetaEstado(p.estado)) : null),
+          h('h2', { class: 'ficha-titulo', id: 'ficha-titulo' }, p.tipo, ubicacionDe(p) ? ` en ${p.zona || p.ciudad}` : ''),
+          precio ? h('p', { class: 'precio' }, precio, ' ', h('small', {}, p.precio.moneda || '')) : h('p', { class: 'precio pendiente' }, 'Precio por confirmar'),
+          h('label', { class: 'comparar-check', for: check.id }, check, 'Agregar a la comparación')),
+        seccionGeneral(p),
+        seccionGaleria(p),
+        seccionVideo(p),
+        seccionCaracteristicas(p),
+        seccionObservaciones(p),
+        seccionCondiciones(p)));
+  }
+
+  /* ======================================================================
+   * 8. COMPARACIÓN
+   * ==================================================================== */
+
+  function criteriosActivos() {
+    const c = app.config.criterios_inversionista;
+    if (!c) return null;
+    const hay = lista(c.tipos).length || lista(c.zonas).length || esNumero(c.precio_min) || esNumero(c.precio_max)
+      || esNumero(c.superficie_terreno_min_m2) || esNumero(c.superficie_construccion_min_m2) || c.acepta_mantenimiento === false;
+    return hay ? c : null;
+  }
+
+  function describirCriterios(c) {
+    const out = [];
+    if (lista(c.tipos).length) out.push(`Tipo: ${c.tipos.join(' o ')}`);
+    if (lista(c.zonas).length) out.push(`Zona: ${c.zonas.join(' o ')}`);
+    const m = c.moneda || 'USD';
+    if (esNumero(c.precio_min) && esNumero(c.precio_max)) out.push(`Precio entre ${formatearPrecio({ monto: c.precio_min, moneda: m })} y ${formatearPrecio({ monto: c.precio_max, moneda: m })}`);
+    else if (esNumero(c.precio_max)) out.push(`Precio hasta ${formatearPrecio({ monto: c.precio_max, moneda: m })}`);
+    else if (esNumero(c.precio_min)) out.push(`Precio desde ${formatearPrecio({ monto: c.precio_min, moneda: m })}`);
+    if (esNumero(c.superficie_terreno_min_m2)) out.push(`Terreno desde ${fmtM2(c.superficie_terreno_min_m2)}`);
+    if (esNumero(c.superficie_construccion_min_m2)) out.push(`Construcción desde ${fmtM2(c.superficie_construccion_min_m2)}`);
+    if (c.acepta_mantenimiento === false) out.push('Sin mantenimiento pendiente');
+    return out;
+  }
+
+  /**
+   * Evalúa una propiedad contra los criterios. Devuelve, por fila de la tabla,
+   * true (coincide), false (no coincide) o null (sin datos para evaluar).
+   */
+  function evaluarCriterios(p, c) {
+    const r = {};
+    if (!c) return r;
+    if (lista(c.tipos).length) r.tipo = c.tipos.includes(p.tipo);
+    if (lista(c.zonas).length) r.ubicacion = hayTexto(p.zona) ? c.zonas.some((z) => normalizar(p.zona).includes(normalizar(z))) : null;
+    if (esNumero(c.precio_min) || esNumero(c.precio_max)) {
+      if (!tienePrecio(p) || monedaDe(p) !== (c.moneda || 'USD')) r.precio = null;
+      else r.precio = (!esNumero(c.precio_min) || p.precio.monto >= c.precio_min) && (!esNumero(c.precio_max) || p.precio.monto <= c.precio_max);
+    }
+    const sup = p.superficie || {};
+    const partes = [];
+    if (esNumero(c.superficie_terreno_min_m2)) partes.push(esNumero(sup.terreno_m2) ? sup.terreno_m2 >= c.superficie_terreno_min_m2 : null);
+    if (esNumero(c.superficie_construccion_min_m2)) partes.push(esNumero(sup.construccion_m2) ? sup.construccion_m2 >= c.superficie_construccion_min_m2 : null);
+    if (partes.length) r.superficie = partes.includes(false) ? false : partes.includes(null) ? null : true;
+    if (c.acepta_mantenimiento === false) r.mantenimiento = !requiereMantenimiento(p);
+    return r;
+  }
+
+  function renderComparacion() {
+    const cont = $('#comparar-contenido');
+    const seleccion = [...app.comparar].map(propiedadPorId).filter(Boolean);
+    const max = app.config.max_comparar || 3;
+
+    if (seleccion.length < 2) {
+      cont.replaceChildren(h('p', { class: 'comparar-vacio' }, seleccion.length === 0
+        ? `Marca «Comparar» en dos o más propiedades del catálogo para verlas lado a lado (hasta ${max}).`
+        : `Marcaste ${seleccion[0].id}. Marca al menos una propiedad más para compararla.`));
+      return;
+    }
+
+    const criterios = criteriosActivos();
+    const evals = new Map(seleccion.map((p) => [p.id, evaluarCriterios(p, criterios)]));
+
+    const superficieNodo = (p) => {
+      const s = p.superficie || {};
+      const partes = [
+        esNumero(s.terreno_m2) ? h('span', {}, `Terreno: ${fmtM2(s.terreno_m2)}`) : null,
+        esNumero(s.construccion_m2) ? h('span', {}, `Construcción: ${fmtM2(s.construccion_m2)}`) : null
+      ].filter(Boolean);
+      return partes.length ? h('div', { class: 'datos' }, partes) : null;
+    };
+
+    const filas = [
+      { clave: 'tipo', etiqueta: 'Tipo de inmueble', valor: (p) => p.tipo },
+      { clave: 'precio', etiqueta: 'Precio', valor: (p) => formatearPrecio(p.precio) },
+      { clave: 'ubicacion', etiqueta: 'Ubicación', valor: ubicacionDe },
+      { clave: 'superficie', etiqueta: 'Superficie', valor: superficieNodo },
+      { clave: 'estado', etiqueta: 'Estado general', valor: (p) => etiquetaEstado(p.estado) },
+      { clave: 'mantenimiento', etiqueta: 'Mantenimiento requerido', valor: (p) => (mantenimientoDe(p).length ? vinetas(mantenimientoDe(p)) : null) },
+      { clave: 'diferenciadoras', etiqueta: 'Características diferenciadoras', valor: (p) => (destacadasDe(p).length ? vinetas(destacadasDe(p)) : null) }
+    ];
+
+    const encabezado = h('tr', {}, h('th', { scope: 'col' }, 'Propiedad'),
+      seleccion.map((p) => {
+        const quitar = h('button', { type: 'button', class: 'quitar', 'aria-label': `Quitar ${p.id} de la comparación` }, 'Quitar');
+        quitar.addEventListener('click', () => alternarComparar(p.id, false));
+        return h('th', { scope: 'col' }, h('span', { class: 'ficha-id' }, p.id), h('div', {}, p.tipo), quitar);
+      }));
+
+    const cuerpo = filas.map((fila) => h('tr', {}, h('th', { scope: 'row' }, fila.etiqueta),
+      seleccion.map((p) => {
+        const valor = fila.valor(p);
+        const ev = evals.get(p.id)[fila.clave];
+        const clases = [];
+        if (valor === null || valor === undefined || valor === '') clases.push('no-indicado');
+        if (ev === true) clases.push('coincide');
+        if (ev === false) clases.push('no-coincide');
+        return h('td', { class: clases.join(' ') || null },
+          clases.includes('no-indicado') ? 'No indicado' : valor,
+          ev === true ? h('span', { class: 'marca-coincidencia' }, '✓ Coincide con el criterio') : null,
+          ev === false ? h('span', { class: 'marca-coincidencia' }, '✗ No coincide con el criterio') : null);
+      })));
+
+    if (criterios) {
+      cuerpo.push(h('tr', {}, h('th', { scope: 'row' }, 'Coincidencias con los criterios'),
+        seleccion.map((p) => {
+          const valores = Object.values(evals.get(p.id));
+          const evaluables = valores.filter((v) => v !== null);
+          const cumplen = evaluables.filter(Boolean).length;
+          const sinDatos = valores.length - evaluables.length;
+          return h('td', { class: 'resumen-coincidencias' },
+            evaluables.length ? `Cumple ${cumplen} de ${evaluables.length} criterios evaluables` : 'Sin datos para evaluar',
+            sinDatos ? h('span', { class: 'marca-coincidencia' }, `${sinDatos} sin datos suficientes`) : null);
+        })));
+    }
+
+    cont.replaceChildren(
+      criterios ? h('p', { class: 'criterios' }, h('b', {}, 'Criterios del inversionista: '), describirCriterios(criterios).join(' · '),
+        criterios._demo ? ' (criterios demostrativos)' : '') : null,
+      h('div', { class: 'tabla-scroll', role: 'region', 'aria-label': 'Tabla comparativa de propiedades', tabindex: '0' },
+        h('table', { class: 'tabla' }, h('thead', {}, encabezado), h('tbody', {}, cuerpo))),
+      h('p', { class: 'nota-comparacion' },
+        'La comparación muestra los datos registrados de cada propiedad y resalta los que coinciden con los criterios. No indica cuál es la mejor inversión: para eso hace falta verificar la información pendiente de cada una.'));
+  }
+
+  function alternarComparar(id, marcado) {
+    const max = app.config.max_comparar || 3;
+    const aviso = $('#barra-texto');
+    if (marcado && !app.comparar.has(id) && app.comparar.size >= max) {
+      sincronizarChecks();
+      aviso.textContent = `Puedes comparar hasta ${max} propiedades. Quita una para agregar otra.`;
+      $('#barra-comparar').hidden = false;
+      return;
+    }
+    if (marcado) app.comparar.add(id); else app.comparar.delete(id);
+    actualizarComparar();
+  }
+
+  function sincronizarChecks() {
+    $$('input[data-comparar]').forEach((c) => { c.checked = app.comparar.has(c.dataset.comparar); });
+  }
+
+  function actualizarComparar() {
+    sincronizarChecks();
+    renderComparacion();
+    const n = app.comparar.size;
+    const barra = $('#barra-comparar');
+    barra.hidden = n === 0;
+    if (n) $('#barra-texto').textContent = `${n} ${n === 1 ? 'propiedad seleccionada' : 'propiedades seleccionadas'} para comparar (máximo ${app.config.max_comparar || 3})`;
+    $('#barra-ver').textContent = n >= 2 ? 'Ver comparación' : 'Ir a la comparación';
+  }
+
+  /* ======================================================================
+   * 9. VISOR DE FOTOGRAFÍAS
+   * ==================================================================== */
+
+  const visor = { fotos: [], i: 0, origen: null, x0: null };
+
+  function mostrarFoto(i) {
+    const n = visor.fotos.length;
+    visor.i = (i + n) % n;
+    const foto = visor.fotos[visor.i];
+    $('#visor-img').src = foto.src;
+    $('#visor-img').alt = foto.alt;
+    $('#visor-pie').textContent = `${foto.pie || foto.alt} · ${visor.i + 1} de ${n}`;
+    [visor.i - 1, visor.i + 1].forEach((j) => { const v = visor.fotos[(j + n) % n]; if (v) new Image().src = v.src; });
+  }
+
+  function abrirVisor(fotos, indice, origen) {
+    visor.fotos = fotos;
+    visor.origen = origen;
+    const dlg = $('#visor');
+    $('#visor-prev').hidden = $('#visor-next').hidden = fotos.length < 2;
+    mostrarFoto(indice);
+    if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
+    $('#visor-cerrar').focus();
+  }
+
+  function cerrarVisor() {
+    const dlg = $('#visor');
+    if (typeof dlg.close === 'function') dlg.close(); else dlg.removeAttribute('open');
+  }
+
+  function iniciarVisor() {
+    const dlg = $('#visor');
+    $('#visor-cerrar').addEventListener('click', cerrarVisor);
+    $('#visor-prev').addEventListener('click', () => mostrarFoto(visor.i - 1));
+    $('#visor-next').addEventListener('click', () => mostrarFoto(visor.i + 1));
+    dlg.addEventListener('click', (e) => { if (e.target === dlg) cerrarVisor(); });
+    dlg.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') mostrarFoto(visor.i - 1);
+      if (e.key === 'ArrowRight') mostrarFoto(visor.i + 1);
+    });
+    dlg.addEventListener('pointerdown', (e) => { visor.x0 = e.clientX; });
+    dlg.addEventListener('pointerup', (e) => {
+      if (visor.x0 === null || visor.fotos.length < 2) return;
+      const dx = e.clientX - visor.x0;
+      visor.x0 = null;
+      if (Math.abs(dx) > 50) mostrarFoto(visor.i + (dx < 0 ? 1 : -1));
+    });
+    dlg.addEventListener('close', () => { $('#visor-img').removeAttribute('src'); if (visor.origen && visor.origen.isConnected) visor.origen.focus(); });
+  }
+
+  /* ======================================================================
+   * 10. NAVEGACIÓN ENTRE VISTAS (hash)
+   *   #/                      → portafolio
+   *   #/comparar              → portafolio, desplazado a la comparación
+   *   #/propiedad/EC-001      → ficha de la propiedad
+   * ==================================================================== */
+
+  function mostrarLista(destino) {
+    const venia = app.vista;
+    app.vista = 'lista';
+    $('#vista-ficha').hidden = true;
+    $('#vista-ficha').replaceChildren();
+    $('#vista-lista').hidden = false;
+    $('.encabezado').hidden = false;
+    document.title = `${app.config.titulo || 'Portafolio inmobiliario'} — ${app.config.marca || 'Estancia Comercial'}`;
+
+    if (destino === 'comparar') {
+      $('#comparar').scrollIntoView();
+      $('#comparar').focus({ preventScroll: true });
+    } else if (venia === 'ficha') {
+      window.scrollTo({ top: app.scrollLista, behavior: 'instant' });
+      const enlace = app.ultimoVisto && $(`[data-ver="${CSS.escape(app.ultimoVisto)}"]`);
+      if (enlace) enlace.focus({ preventScroll: true });
+    }
+  }
+
+  function mostrarFicha(p) {
+    if (app.vista === 'lista') app.scrollLista = window.scrollY;
+    app.vista = 'ficha';
+    app.ultimoVisto = p.id;
+    $('#vista-lista').hidden = true;
+    $('.encabezado').hidden = true;
+    const vista = $('#vista-ficha');
+    vista.replaceChildren(construirFicha(p));
+    vista.hidden = false;
+    document.title = `${p.id} · ${p.tipo}${ubicacionDe(p) ? ' — ' + ubicacionDe(p) : ''} — ${app.config.marca || 'Estancia Comercial'}`;
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    $('#contenido').focus({ preventScroll: true });
+  }
+
+  function enrutar() {
+    let hash = '';
+    try { hash = decodeURIComponent(window.location.hash || ''); } catch (e) { hash = ''; }
+    const m = hash.match(/^#\/propiedad\/(.+)$/);
+    if (m) {
+      const p = propiedadPorId(m[1]);
+      if (p) { mostrarFicha(p); return; }
+    }
+    mostrarLista(hash === '#/comparar' ? 'comparar' : null);
+  }
+
+  /* ======================================================================
+   * 11. ARRANQUE
+   * ==================================================================== */
+
+  async function cargarJSON(ruta) {
+    const resp = await fetch(ruta, { credentials: 'same-origin' });
+    if (!resp.ok) throw new Error(`${ruta}: HTTP ${resp.status}`);
+    return resp.json();
+  }
+
+  function mostrarErrorDeCarga(error) {
+    console.error('[Portafolio] No se pudieron cargar los datos.', error);
+    $('#vista-lista').replaceChildren(h('div', { class: 'contenedor' },
+      h('p', { class: 'vacio' },
+        'No se pudieron cargar los datos del portafolio. Si abriste el archivo index.html directamente desde tu computadora, ' +
+        'publícalo o ábrelo con un servidor local (consulta el README). Si el problema continúa, avisa a Estancia Comercial.')));
+  }
+
+  async function iniciar() {
+    try {
+      const [config, datos] = await Promise.all([cargarJSON(RUTA_CONFIG), cargarJSON(RUTA_PROPIEDADES)]);
+      app.config = config || {};
+      // Solo propiedades publicadas y con identificador y tipo (los campos mínimos).
+      app.propiedades = lista(datos && datos.propiedades).filter((p) => p && p.publicada !== false && hayTexto(p.id) && hayTexto(p.tipo));
+    } catch (error) {
+      mostrarErrorDeCarga(error);
+      return;
+    }
+
+    renderEncabezado();
+    renderResumen();
+    iniciarFiltros();
+    iniciarVisor();
+    renderCatalogo();
+    renderContacto();
+    actualizarComparar();
+
+    $('#barra-limpiar').addEventListener('click', () => { app.comparar.clear(); actualizarComparar(); });
+    window.addEventListener('hashchange', enrutar);
+    enrutar();
+  }
+
+  // Expuesto solo para pruebas y depuración.
+  window.PortafolioEC = { parseYouTube, formatearPrecio, evaluarCriterios };
+
+  iniciar();
+})();
