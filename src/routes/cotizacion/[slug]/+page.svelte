@@ -78,7 +78,7 @@ const formatoMoneda = (valor) =>
 			</p>
 
 			{#if cotizacion.descripcion}
-				<p class="mt-6 max-w-3xl text-slate-600">
+				<p class="mt-6 max-w-3xl whitespace-pre-line leading-relaxed text-slate-600">
 					{cotizacion.descripcion}
 				</p>
 			{/if}
@@ -170,7 +170,7 @@ const formatoMoneda = (valor) =>
 
 							{#if opcion.descripcion}
 
-								<p class="mt-3 min-h-12 text-sm leading-relaxed text-slate-600">
+								<p class="mt-3 min-h-12 whitespace-pre-line text-sm leading-relaxed text-slate-600">
 									{opcion.descripcion}
 								</p>
 
