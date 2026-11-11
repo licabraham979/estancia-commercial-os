@@ -20,6 +20,23 @@
 	let resumenEventos = $state({ eventos_registrados: 0, entradas_confirmadas: 0, operaciones_realizadas: 0, resultado_acumulado: 0 });
 	let cargandoEventos = $state(false);
 	let errorEventos = $state('');
+	/** @type {Array<any>} */
+	let operaciones = $state([]);
+	let cargandoOperaciones = $state(false);
+	let errorOperaciones = $state('');
+	let mensajeOperaciones = $state('');
+	let nuevoMercado = $state('GOLD');
+	let nuevoLado = $state('BUY');
+	let nuevoPrecio = $state('');
+	let nuevoComentario = $state('');
+	/** @type {Record<string, string>} */
+	let preciosSalida = $state({});
+	/** @type {string[]} */
+	let seleccionEventos = $state([]);
+	/** @type {string[]} */
+	let seleccionOperaciones = $state([]);
+	let pestanaTrading = $state('registros');
+
 
 	let snapshotActual = $derived(
 		snapshots.find((item) => item.market === mercadoSeleccionado)?.snapshot ?? null
@@ -28,10 +45,43 @@
 		snapshotActual?.timeframes?.[temporalidadSeleccionada] ?? null
 	);
 
+	let rendimiento = $derived(calcularRendimiento());
+
+	/** @returns {{ positivas: number, negativas: number, be: number, tasa: number | null }} */
+	function calcularRendimiento() {
+		const resultado = { positivas: 0, negativas: 0, be: 0, tasa: /** @type {number | null} */ (null) };
+		for (const op of operaciones) {
+			if (op.status !== 'CLOSED') continue;
+			const entrada = Number(op.entry_price);
+			const salida = Number(op.exit_price);
+			if (!Number.isFinite(entrada) || !Number.isFinite(salida)) continue;
+			if (entrada === salida) {
+				resultado.be++;
+			} else if (
+				(op.side === 'BUY' && salida > entrada) ||
+				(op.side === 'SELL' && salida < entrada)
+			) {
+				resultado.positivas++;
+			} else {
+				resultado.negativas++;
+			}
+		}
+		const evaluadas = resultado.positivas + resultado.negativas;
+		resultado.tasa = evaluadas
+			? (resultado.positivas / evaluadas) * 100
+			: null;
+		return resultado;
+	}
+
 	onMount(() => {
-		cargarSnapshots();
-		cargarEventos();
+		actualizarTodo();
+		const intervalo = setInterval(actualizarTodo, 15000);
+		return () => clearInterval(intervalo);
 	});
+
+	async function actualizarTodo() {
+		await Promise.all([cargarSnapshots(), cargarEventos(), cargarOperaciones()]);
+	}
 
 	async function cargarSnapshots() {
 		cargandoSnapshots = true;
@@ -83,6 +133,178 @@
 			errorEventos = error instanceof Error ? error.message : 'Error de conexión.';
 		} finally {
 			cargandoEventos = false;
+		}
+	}
+
+
+	async function cargarOperaciones() {
+		cargandoOperaciones = true;
+		errorOperaciones = '';
+		try {
+			const { data: { session } } = await supabase.auth.getSession();
+			if (!session?.access_token) throw new Error('No se encontró una sesión activa.');
+
+			const response = await fetch('/api/mt5/operations', {
+				headers: { Authorization: `Bearer ${session.access_token}` }
+			});
+			const resultado = await response.json();
+			if (!response.ok || !resultado.success) {
+				throw new Error(resultado.error || 'No se pudieron cargar las operaciones.');
+			}
+			operaciones = resultado.operaciones || [];
+			resumenEventos = {
+				...resumenEventos,
+				operaciones_realizadas: operaciones.length
+			};
+		} catch (error) {
+			errorOperaciones = error instanceof Error ? error.message : 'Error de conexión.';
+		} finally {
+			cargandoOperaciones = false;
+		}
+	}
+
+	async function tokenActual() {
+		const { data: { session } } = await supabase.auth.getSession();
+		if (!session?.access_token) throw new Error('No se encontró una sesión activa.');
+		return session.access_token;
+	}
+
+	/** @param {any} evento */
+	async function tomarEvento(evento) {
+		mensajeOperaciones = '';
+		errorOperaciones = '';
+		try {
+			const response = await fetch('/api/mt5/operations', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${await tokenActual()}`
+				},
+				body: JSON.stringify({ evento_id: evento.id })
+			});
+			const resultado = await response.json();
+			if (!response.ok || !resultado.success) {
+				throw new Error(resultado.error || 'No se pudo tomar la oportunidad.');
+			}
+			mensajeOperaciones = `Oportunidad ${evento.market} registrada como operación.`;
+			await Promise.all([cargarOperaciones(), cargarEventos()]);
+		} catch (error) {
+			errorOperaciones = error instanceof Error ? error.message : 'No se pudo tomar la oportunidad.';
+		}
+	}
+
+	async function registrarOperacion() {
+		mensajeOperaciones = '';
+		errorOperaciones = '';
+		try {
+			const response = await fetch('/api/mt5/operations', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${await tokenActual()}`
+				},
+				body: JSON.stringify({
+					market: nuevoMercado,
+					side: nuevoLado,
+					entry_price: nuevoPrecio,
+					notes: nuevoComentario
+				})
+			});
+			const resultado = await response.json();
+			if (!response.ok || !resultado.success) {
+				throw new Error(resultado.error || 'No se pudo registrar la operación.');
+			}
+			nuevoPrecio = '';
+			nuevoComentario = '';
+			mensajeOperaciones = 'Operación manual registrada.';
+			await cargarOperaciones();
+		} catch (error) {
+			errorOperaciones = error instanceof Error ? error.message : 'No se pudo registrar la operación.';
+		}
+	}
+
+	/** @param {string} id */
+	async function cerrarOperacion(id) {
+		const precio = Number(preciosSalida[id]);
+		if (!Number.isFinite(precio) || precio <= 0) {
+			errorOperaciones = 'Introduce un precio de salida válido.';
+			return;
+		}
+		mensajeOperaciones = '';
+		errorOperaciones = '';
+		try {
+			const response = await fetch(`/api/mt5/operations/${id}`, {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${await tokenActual()}`
+				},
+				body: JSON.stringify({ exit_price: precio })
+			});
+			const resultado = await response.json();
+			if (!response.ok || !resultado.success) {
+				throw new Error(resultado.error || 'No se pudo cerrar la operación.');
+			}
+			mensajeOperaciones = 'Operación cerrada con el precio de salida indicado.';
+			await cargarOperaciones();
+		} catch (error) {
+			errorOperaciones = error instanceof Error ? error.message : 'No se pudo cerrar la operación.';
+		}
+	}
+
+	/** @param {string} id @param {'evento' | 'operacion'} tipo */
+	function alternarSeleccion(id, tipo) {
+		const actual = tipo === 'evento' ? seleccionEventos : seleccionOperaciones;
+		const siguiente = actual.includes(id)
+			? actual.filter((item) => item !== id)
+			: [...actual, id];
+		if (tipo === 'evento') seleccionEventos = siguiente;
+		else seleccionOperaciones = siguiente;
+	}
+
+	async function borrarEventosSeleccionados() {
+		if (!seleccionEventos.length) return;
+		errorEventos = '';
+		try {
+			const response = await fetch('/api/mt5/events', {
+				method: 'DELETE',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${await tokenActual()}`
+				},
+				body: JSON.stringify({ ids: seleccionEventos })
+			});
+			const resultado = await response.json();
+			if (!response.ok || !resultado.success) {
+				throw new Error(resultado.error || 'No se pudieron eliminar los eventos.');
+			}
+			seleccionEventos = [];
+			await cargarEventos();
+		} catch (error) {
+			errorEventos = error instanceof Error ? error.message : 'No se pudieron eliminar los eventos.';
+		}
+	}
+
+	async function borrarOperacionesSeleccionadas() {
+		if (!seleccionOperaciones.length) return;
+		errorOperaciones = '';
+		try {
+			const response = await fetch('/api/mt5/operations', {
+				method: 'DELETE',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${await tokenActual()}`
+				},
+				body: JSON.stringify({ ids: seleccionOperaciones })
+			});
+			const resultado = await response.json();
+			if (!response.ok || !resultado.success) {
+				throw new Error(resultado.error || 'No se pudieron eliminar las operaciones.');
+			}
+			seleccionOperaciones = [];
+			await Promise.all([cargarOperaciones(), cargarEventos()]);
+		} catch (error) {
+			errorOperaciones = error instanceof Error ? error.message : 'No se pudieron eliminar las operaciones.';
 		}
 	}
 
@@ -139,6 +361,13 @@
 		if (estado === 0) return 'Normal';
 		if (estado === 1) return 'Expansión';
 		if (estado === 2) return 'Muy alto';
+		return 'Sin datos';
+	}
+
+	/** @param {unknown} valor */
+	function siNo(valor) {
+		if (valor === true) return 'Sí';
+		if (valor === false) return 'No';
 		return 'Sin datos';
 	}
 
@@ -209,8 +438,8 @@
 				<h2>Lectura multitemporal MT5</h2>
 				<p>Datos recibidos desde el EA · Análisis contextual, sin señales automáticas.</p>
 			</div>
-			<button class="refresh-button" on:click={cargarSnapshots} disabled={cargandoSnapshots}>
-				{cargandoSnapshots ? 'Actualizando…' : '↻ Actualizar'}
+			<button class="refresh-button" on:click={actualizarTodo} disabled={cargandoSnapshots || cargandoEventos}>
+				{cargandoSnapshots || cargandoEventos ? 'Actualizando…' : '↻ Actualizar'}
 			</button>
 		</div>
 
@@ -320,112 +549,306 @@
 
 		<div class="stats-grid">
 			<article class="stat-card">
-				<span>Eventos registrados</span>
-				<strong>{resumenEventos.eventos_registrados}</strong>
-				<small>Contexto y entradas recibidos</small>
+				<span>Operaciones positivas</span>
+				<strong>{rendimiento.positivas}</strong>
+				<small>Salida favorable según BUY / SELL</small>
 			</article>
 
 			<article class="stat-card">
-				<span>Entradas confirmadas</span>
-				<strong>{resumenEventos.entradas_confirmadas}</strong>
-				<small>Confirmaciones del indicador</small>
+				<span>Operaciones negativas</span>
+				<strong>{rendimiento.negativas}</strong>
+				<small>Salida desfavorable según BUY / SELL</small>
 			</article>
 
 			<article class="stat-card">
-				<span>Operaciones realizadas</span>
-				<strong>{resumenEventos.operaciones_realizadas}</strong>
-				<small>Operaciones registradas</small>
+				<span>Break even (BE)</span>
+				<strong>{rendimiento.be}</strong>
+				<small>Entrada y salida al mismo precio</small>
 			</article>
 
 			<article class="stat-card">
-				<span>Resultado acumulado</span>
-				<strong>{formato(resumenEventos.resultado_acumulado, 2)}</strong>
-				<small>Resultado de operaciones cerradas</small>
+				<span>Porcentaje de acierto</span>
+				<strong>{rendimiento.tasa === null ? '—' : `${rendimiento.tasa.toFixed(1)}%`}</strong>
+				<small>Positivas / (positivas + negativas)</small>
 			</article>
 		</div>
+		<p class="stats-note">Solo operaciones cerradas. Los BE y las operaciones abiertas no entran en el porcentaje de acierto.</p>
 	</section>
 
-	<section class="bottom-grid">
-		<article class="panel">
-			<div class="panel-heading">
-				<div>
-					<h2>Actividad reciente</h2>
-					<p>Últimas transiciones recibidas y guardadas desde MT5.</p>
-				</div>
-				<span class="panel-icon">◷</span>
-			</div>
+	<section class="records-section">
+		<div class="trading-tabs" role="tablist" aria-label="Gestión de trading">
+			<button
+				class:active={pestanaTrading === 'registros'}
+				class="trading-tab"
+				role="tab"
+				aria-selected={pestanaTrading === 'registros'}
+				on:click={() => pestanaTrading = 'registros'}
+			>
+				Registros
+				<span>{eventos.length}</span>
+			</button>
+			<button
+				class:active={pestanaTrading === 'ejecuciones'}
+				class="trading-tab"
+				role="tab"
+				aria-selected={pestanaTrading === 'ejecuciones'}
+				on:click={() => pestanaTrading = 'ejecuciones'}
+			>
+				Ejecuciones
+				<span>{operaciones.length}</span>
+			</button>
+		</div>
 
-			{#if errorEventos}
-				<div class="mt5-message error">{errorEventos}</div>
-			{:else if cargandoEventos && eventos.length === 0}
-				<div class="empty-state"><strong>Cargando historial MT5…</strong></div>
-			{:else if eventos.length > 0}
-				<div class="event-list">
-					{#each eventos as evento (evento.id)}
-						<div class="event-row">
-							<div class="event-main">
-								<strong>{nombreEvento(evento.event_type)}</strong>
-								<span>{evento.market} · {evento.side || '—'} · {evento.route || '—'}</span>
-							</div>
-							<div class="event-detail">
-								<strong>{formato(evento.event_price, 2)}</strong>
-								<small>{fecha(evento.event_time_ms)}</small>
-							</div>
+		{#if pestanaTrading === 'registros'}
+			<div class="tab-content">
+				<div class="panel">
+					<div class="panel-heading">
+						<div>
+							<h2>Actividad reciente</h2>
+							<p>Últimas transiciones recibidas y guardadas desde MT5.</p>
 						</div>
-					{/each}
-				</div>
-			{:else}
-				<div class="empty-state">
-					<div class="empty-icon">⌁</div>
-					<strong>Sin eventos registrados todavía</strong>
-					<p>Cuando el EA detecte una transición de oportunidad, aparecerá aquí.</p>
-				</div>
-			{/if}
-		</article>
+						<div class="panel-actions">
+							{#if seleccionEventos.length > 0}
+								<button class="danger-button" on:click={borrarEventosSeleccionados}>
+									Eliminar ({seleccionEventos.length})
+								</button>
+							{/if}
+							<span class="panel-icon">◷</span>
+						</div>
+					</div>
 
-		<article class="panel">
-			<div class="panel-heading">
-				<div>
-					<h2>Estado del sistema</h2>
-					<p>Componentes de la integración.</p>
+					{#if errorEventos}
+						<div class="mt5-message error">{errorEventos}</div>
+					{:else if cargandoEventos && eventos.length === 0}
+						<div class="empty-state"><strong>Cargando historial MT5…</strong></div>
+					{:else if eventos.length > 0}
+						<div class="event-list">
+							{#each eventos as evento (evento.id)}
+								<div class="event-row">
+									<input
+										class="row-check"
+										type="checkbox"
+										checked={seleccionEventos.includes(evento.id)}
+										on:change={() => alternarSeleccion(evento.id, 'evento')}
+										aria-label="Seleccionar evento"
+									/>
+									<div class="event-main">
+										<strong>{nombreEvento(evento.event_type)}</strong>
+										<span>{evento.market} · {evento.side || '—'} · {evento.route || '—'}</span>
+									</div>
+									<div class="event-detail">
+										<strong>{formato(evento.event_price, 2)}</strong>
+										<small>{fecha(evento.event_time_ms)}</small>
+									</div>
+									{#if evento.event_type === 'ENTRY_SETUP_STARTED' || evento.event_type === 'ENTRY_SETUP_CONFIRMED'}
+										{#if operaciones.some((op) => op.evento_id === evento.id)}
+											<span class="taken-label">Tomada</span>
+										{:else}
+											<button class="take-button" on:click={() => tomarEvento(evento)}>Tomar</button>
+										{/if}
+									{/if}
+								</div>
+							{/each}
+						</div>
+					{:else}
+						<div class="empty-state">
+							<div class="empty-icon">⌁</div>
+							<strong>Sin eventos registrados todavía</strong>
+							<p>Cuando el EA detecte una transición de oportunidad, aparecerá aquí.</p>
+						</div>
+					{/if}
 				</div>
-				<span class="panel-icon">⚙</span>
+
+				{#if errorOperaciones}
+					<div class="mt5-message error">{errorOperaciones}</div>
+				{/if}
+				{#if mensajeOperaciones}
+					<div class="mt5-message success">{mensajeOperaciones}</div>
+				{/if}
+
+				<div class="panel system-panel">
+					<div class="panel-heading">
+						<div>
+							<h2>Estado del sistema</h2>
+							<p>Componentes de la integración.</p>
+						</div>
+						<span class="panel-icon">⚙</span>
+					</div>
+					<div class="system-list">
+						<div class="system-row">
+							<div><strong>Indicador Pine Script</strong><small>Versión 5.8</small></div>
+							<span class="system-badge ready">Compilado</span>
+						</div>
+						<div class="system-row">
+							<div><strong>API de recepción</strong><small>Webhook MT5</small></div>
+							<span class="system-badge pending">Pendiente</span>
+						</div>
+						<div class="system-row">
+							<div><strong>Base de datos</strong><small>Historial de eventos</small></div>
+							<span class="system-badge pending">Pendiente</span>
+						</div>
+						<div class="system-row">
+							<div><strong>Historial y análisis</strong><small>Estadísticas y resultados</small></div>
+							<span class="system-badge pending">Pendiente</span>
+						</div>
+					</div>
+				</div>
 			</div>
-
-			<div class="system-list">
-				<div class="system-row">
-					<div>
-						<strong>Indicador Pine Script</strong>
-						<small>Versión 5.8</small>
+		{:else}
+			<div class="tab-content">
+				<div class="panel">
+					<div class="panel-heading">
+						<div>
+							<h2>Nueva operación manual</h2>
+							<p>Registra una operación que no provenga de una oportunidad MT5.</p>
+						</div>
 					</div>
-					<span class="system-badge ready">Compilado</span>
+
+					<form class="operation-form" on:submit|preventDefault={registrarOperacion}>
+						<label>
+							<span>Mercado</span>
+							<select bind:value={nuevoMercado}>
+								<option value="BTCUSD">BTCUSD</option>
+								<option value="US100Cash">US100Cash</option>
+								<option value="GOLD">GOLD</option>
+								<option value="US30Cash">US30Cash</option>
+							</select>
+						</label>
+						<label>
+							<span>Dirección</span>
+							<select bind:value={nuevoLado}>
+								<option value="BUY">BUY</option>
+								<option value="SELL">SELL</option>
+							</select>
+						</label>
+						<label>
+							<span>Precio de entrada</span>
+							<input type="number" min="0" step="any" bind:value={nuevoPrecio} placeholder="Precio de entrada" required />
+						</label>
+						<label class="notes-field">
+							<span>Nota (opcional)</span>
+							<input type="text" bind:value={nuevoComentario} placeholder="Contexto de la operación" />
+						</label>
+						<button class="take-button form-submit" type="submit">Registrar operación</button>
+					</form>
 				</div>
 
-				<div class="system-row">
-					<div>
-						<strong>API de recepción</strong>
-						<small>Webhook de TradingView</small>
-					</div>
-					<span class="system-badge pending">Pendiente</span>
-				</div>
+				{#if errorOperaciones}
+					<div class="mt5-message error">{errorOperaciones}</div>
+				{/if}
+				{#if mensajeOperaciones}
+					<div class="mt5-message success">{mensajeOperaciones}</div>
+				{/if}
 
-				<div class="system-row">
-					<div>
-						<strong>Base de datos</strong>
-						<small>Historial de eventos</small>
+				<div class="panel">
+					<div class="panel-heading">
+						<div>
+							<h2>Operaciones</h2>
+							<p>Entradas tomadas desde Registros y operaciones manuales.</p>
+						</div>
+						{#if seleccionOperaciones.length > 0}
+							<button class="danger-button" on:click={borrarOperacionesSeleccionadas}>
+								Eliminar ({seleccionOperaciones.length})
+							</button>
+						{/if}
 					</div>
-					<span class="system-badge pending">Pendiente</span>
-				</div>
 
-				<div class="system-row">
-					<div>
-						<strong>Historial y análisis</strong>
-						<small>Estadísticas y resultados</small>
-					</div>
-					<span class="system-badge pending">Pendiente</span>
+					{#if cargandoOperaciones && operaciones.length === 0}
+						<div class="empty-state"><strong>Cargando operaciones…</strong></div>
+					{:else if operaciones.length > 0}
+						<div class="operation-list">
+							{#each operaciones as operacion (operacion.id)}
+								<div class="operation-row">
+									<input
+										class="row-check"
+										type="checkbox"
+										checked={seleccionOperaciones.includes(operacion.id)}
+										on:change={() => alternarSeleccion(operacion.id, 'operacion')}
+										aria-label="Seleccionar operación"
+									/>
+									<div class="operation-main">
+										<strong>{operacion.market} · {operacion.side}</strong>
+										<span>Entrada: {formato(operacion.entry_price, 2)} · {fecha(operacion.opened_at)}</span>
+										{#if operacion.notes}
+											<small>{operacion.notes}</small>
+										{/if}
+										{#if operacion.contexto_evento?.context}
+											{@const ctx = operacion.contexto_evento.context}
+											<details class="context-details">
+												<summary>Ver contexto técnico de entrada</summary>
+												<div class="context-grid">
+													<section class="context-block">
+														<strong>M1 · EMAs y RSI</strong>
+														<span>Tendencia: {tendencia(ctx.M1?.trend_state)}</span>
+														<span>RSI: {formato(ctx.M1?.rsi)} · Media: {formato(ctx.M1?.rsi_ma)}</span>
+														<span>Separación: {separacionRSI(ctx.M1?.rsi_separation)} · {direccionRSI(ctx.M1?.rsi_direction)}</span>
+														<span>EMA 20: {formato(ctx.M1?.ema?.['20'])} · 50: {formato(ctx.M1?.ema?.['50'])}</span>
+														<span>EMA 100: {formato(ctx.M1?.ema?.['100'])} · 200: {formato(ctx.M1?.ema?.['200'])}</span>
+													</section>
+													<section class="context-block">
+														<strong>M5 · Estructura y ATR</strong>
+														<span>Tendencia: {tendencia(ctx.M5?.trend_state)}</span>
+														<span>RSI: {formato(ctx.M5?.rsi)} · Media: {formato(ctx.M5?.rsi_ma)}</span>
+														<span>Separación: {separacionRSI(ctx.M5?.rsi_separation)} · {direccionRSI(ctx.M5?.rsi_direction)}</span>
+														<span>Velas rojas: {ctx.M5?.red_count ?? '—'} · Verdes: {ctx.M5?.green_count ?? '—'}</span>
+														<span>Reacción EMA200: {ctx.M5?.ema200_reaction ?? '—'} · Antigüedad: {ctx.M5?.ema200_reaction_age ?? '—'}</span>
+														<span>ATR: {formato(ctx.M5?.atr_value)} · Ratio: {formato(ctx.M5?.atr_ratio)} · {estadoATR(ctx.M5?.atr_state)}</span>
+													</section>
+													<section class="context-block">
+														<strong>M15 · Velas y liquidez</strong>
+														<span>Tendencia: {tendencia(ctx.M15?.trend_state)}</span>
+														<span>RSI: {formato(ctx.M15?.rsi)} · Media: {formato(ctx.M15?.rsi_ma)}</span>
+														<span>Separación: {separacionRSI(ctx.M15?.rsi_separation)} · {direccionRSI(ctx.M15?.rsi_direction)}</span>
+														<span>Mecha superior: {formato(ctx.M15?.upper_wick)} · Inferior: {formato(ctx.M15?.lower_wick)}</span>
+														<span>Barrido máximo: {siNo(ctx.M15?.sweep_high)} · mínimo: {siNo(ctx.M15?.sweep_low)}</span>
+														<span>Rojas: {ctx.M15?.red_closed ?? '—'} · Verdes: {ctx.M15?.green_closed ?? '—'} · Impulso: {siNo(ctx.M15?.impulse)}</span>
+														<span>Corona: {ctx.M15?.crown ?? '—'}</span>
+													</section>
+													<section class="context-block">
+														<strong>M30 · Transición</strong>
+														<span>Tendencia: {tendencia(ctx.M30?.trend_state)}</span>
+														<span>RSI: {formato(ctx.M30?.rsi)} · Media: {formato(ctx.M30?.rsi_ma)}</span>
+														<span>Separación: {separacionRSI(ctx.M30?.rsi_separation)} · {direccionRSI(ctx.M30?.rsi_direction)}</span>
+														<span>Transición: {ctx.M30?.transition ?? '—'}</span>
+														<span>EMA20 bajo EMA100: {siNo(ctx.M30?.ema20_below100)} · Cerca: {siNo(ctx.M30?.ema20_near100)}</span>
+														<span>EMA20 cayendo: {siNo(ctx.M30?.ema20_falling)} · RSI cayendo: {siNo(ctx.M30?.rsi_falling)}</span>
+														<span>Cruce EMA100 abajo: {siNo(ctx.M30?.cross_down100)} · arriba: {siNo(ctx.M30?.cross_up100)}</span>
+													</section>
+												</div>
+											</details>
+										{/if}
+									</div>
+									{#if operacion.status === 'OPEN'}
+										<div class="exit-control">
+											<input
+												type="number"
+												min="0"
+												step="any"
+												bind:value={preciosSalida[operacion.id]}
+												placeholder="Precio salida"
+												aria-label="Precio de salida"
+											/>
+											<button class="close-button" on:click={() => cerrarOperacion(operacion.id)}>Cerrar</button>
+										</div>
+									{:else}
+										<div class="operation-closed">
+											<strong>Salida: {formato(operacion.exit_price, 2)}</strong>
+											<span>Cerrada · {fecha(operacion.closed_at)}</span>
+										</div>
+									{/if}
+								</div>
+							{/each}
+						</div>
+					{:else}
+						<div class="empty-state">
+							<div class="empty-icon">↗</div>
+							<strong>Sin operaciones registradas</strong>
+							<p>Toma una oportunidad desde Registros o agrega una operación manual.</p>
+						</div>
+					{/if}
 				</div>
 			</div>
-		</article>
+		{/if}
 	</section>
 
 	<footer>
@@ -655,6 +1078,12 @@
 
 	.stat-card small {
 		color: #94a3b8;
+		font-size: 11px;
+	}
+
+	.stats-note {
+		margin: 10px 2px 0;
+		color: #64748b;
 		font-size: 11px;
 	}
 
@@ -902,6 +1331,201 @@
 	@media (max-width: 760px) {
 		.mt5-overview, .mt5-data-grid { grid-template-columns: 1fr; }
 		.atr-card { align-items: stretch; }
+	}
+
+
+	.records-section {
+		margin: 28px 0 32px;
+		border: 1px solid #e2e8f0;
+		border-radius: 14px;
+		background: #f8fafc;
+		overflow: hidden;
+	}
+	.trading-tabs {
+		display: flex;
+		gap: 6px;
+		padding: 10px 14px 0;
+		border-bottom: 1px solid #e2e8f0;
+		background: #fff;
+	}
+	.trading-tab {
+		display: inline-flex;
+		align-items: center;
+		gap: 9px;
+		padding: 12px 16px;
+		border: 0;
+		border-bottom: 2px solid transparent;
+		background: transparent;
+		color: #64748b;
+		font-size: 12px;
+		font-weight: 700;
+		cursor: pointer;
+	}
+	.trading-tab.active {
+		border-bottom-color: #2563eb;
+		color: #1d4ed8;
+	}
+	.trading-tab span {
+		padding: 2px 7px;
+		border-radius: 20px;
+		background: #f1f5f9;
+		font-size: 10px;
+	}
+	.tab-content {
+		display: grid;
+		gap: 14px;
+		padding: 16px;
+	}
+	.tab-content .panel {
+		min-width: 0;
+		padding: 18px;
+		border: 1px solid #e2e8f0;
+		border-radius: 10px;
+		background: #fff;
+	}
+	.panel-actions {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+	}
+	.row-check {
+		width: 15px;
+		height: 15px;
+		flex: 0 0 auto;
+		accent-color: #2563eb;
+		cursor: pointer;
+	}
+	.take-button, .close-button, .danger-button {
+		padding: 8px 12px;
+		border: 0;
+		border-radius: 7px;
+		font-size: 11px;
+		font-weight: 700;
+		cursor: pointer;
+		white-space: nowrap;
+	}
+	.take-button {
+		background: #dbeafe;
+		color: #1d4ed8;
+	}
+	.close-button {
+		background: #dcfce7;
+		color: #166534;
+	}
+	.danger-button {
+		background: #fee2e2;
+		color: #b91c1c;
+	}
+	.taken-label {
+		color: #64748b;
+		font-size: 10px;
+		font-weight: 700;
+	}
+	.operation-form {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 12px;
+		align-items: end;
+	}
+	.operation-form label, .exit-control {
+		display: grid;
+		gap: 6px;
+		min-width: 0;
+	}
+	.operation-form label span {
+		color: #64748b;
+		font-size: 10px;
+		font-weight: 700;
+	}
+	.operation-form input, .operation-form select, .exit-control input {
+		width: 100%;
+		min-width: 0;
+		min-height: 38px;
+		padding: 0 10px;
+		border: 1px solid #cbd5e1;
+		border-radius: 7px;
+		background: #fff;
+		color: #0f172a;
+		font-size: 12px;
+	}
+	.notes-field { grid-column: span 2; }
+	.form-submit { min-height: 38px; }
+	.operation-list { display: grid; }
+	.operation-row {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr) minmax(150px, auto);
+		align-items: center;
+		gap: 14px;
+		padding: 13px 0;
+		border-bottom: 1px solid #f1f5f9;
+	}
+	.operation-row:last-child { border-bottom: 0; }
+	.operation-main { display: grid; gap: 5px; min-width: 0; }
+	.operation-main strong { color: #0f172a; font-size: 12px; }
+	.operation-main span, .operation-main small,
+	.operation-closed span {
+		color: #64748b;
+		font-size: 10px;
+		overflow-wrap: anywhere;
+	}
+	.exit-control { grid-template-columns: minmax(100px, 1fr) auto; align-items: center; }
+	.operation-closed { display: grid; gap: 5px; text-align: right; }
+	.operation-closed strong { color: #166534; font-size: 11px; }
+
+	.context-details {
+		margin-top: 7px;
+		padding: 8px 10px;
+		border: 1px solid #e2e8f0;
+		border-radius: 8px;
+		background: #f8fafc;
+	}
+	.context-details summary {
+		color: #334155;
+		font-size: 10px;
+		font-weight: 700;
+		cursor: pointer;
+	}
+	.context-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 9px;
+		margin-top: 10px;
+	}
+	.context-block {
+		display: grid;
+		gap: 4px;
+		min-width: 0;
+		padding: 8px;
+		border: 1px solid #e2e8f0;
+		border-radius: 6px;
+		background: white;
+	}
+	.context-block strong {
+		color: #0f172a;
+		font-size: 10px;
+	}
+	.context-block span {
+		color: #64748b;
+		font-size: 9px;
+		overflow-wrap: anywhere;
+	}
+	.mt5-message.success {
+		color: #166534;
+		border-color: #bbf7d0;
+		background: #f0fdf4;
+	}
+	@media (max-width: 760px) {
+		.operation-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+		.operation-row { grid-template-columns: auto minmax(0, 1fr); }
+		.exit-control, .operation-closed { grid-column: 2; text-align: left; }
+	}
+	@media (max-width: 460px) {
+		.tab-content { padding: 10px; }
+		.tab-content .panel { padding: 13px; }
+		.operation-form { grid-template-columns: 1fr; }
+		.notes-field { grid-column: auto; }
+		.event-row { flex-wrap: wrap; }
+		.event-detail { margin-left: auto; }
 	}
 
 </style>

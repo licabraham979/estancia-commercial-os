@@ -80,3 +80,63 @@ export async function GET({ request }) {
 		);
 	}
 }
+
+
+export async function DELETE({ request }) {
+	try {
+		const authorization = request.headers.get('authorization');
+
+		if (!authorization?.startsWith('Bearer ')) {
+			return json({ error: 'No autorizado.' }, { status: 401 });
+		}
+
+		const { data: { user }, error: authError } =
+			await supabaseServer.auth.getUser(authorization.slice(7));
+
+		if (authError || !user) {
+			return json({ error: 'Sesión no válida.' }, { status: 401 });
+		}
+
+		const ownerId = env.TRADING_SIGNAL_OWNER_ID;
+
+		if (!ownerId || user.id !== ownerId) {
+			return json({ error: 'Sin permiso para eliminar estos datos.' }, { status: 403 });
+		}
+
+		const body = await request.json();
+		const ids = [...new Set(body.ids || [])]
+			.filter((id) => typeof id === 'string' && id.length > 0);
+
+		if (!ids.length) {
+			return json({ error: 'Selecciona al menos un evento.' }, { status: 400 });
+		}
+
+		const { data: vinculadas, error: vinculadasError } = await supabaseServer
+			.from('trading_operaciones')
+			.select('evento_id')
+			.eq('owner_id', ownerId)
+			.in('evento_id', ids);
+
+		if (vinculadasError) throw vinculadasError;
+
+		if (vinculadas?.length) {
+			return json({
+				error: 'No se pueden eliminar eventos vinculados a operaciones. Elimina primero las operaciones correspondientes.'
+			}, { status: 409 });
+		}
+
+		const { data, error } = await supabaseServer
+			.from('trading_eventos')
+			.delete()
+			.eq('owner_id', ownerId)
+			.in('id', ids)
+			.select('id');
+
+		if (error) throw error;
+
+		return json({ success: true, eliminados: data?.length || 0 });
+	} catch (error) {
+		console.error('[MT5 events DELETE]', error);
+		return json({ error: 'No se pudieron eliminar los eventos seleccionados.' }, { status: 500 });
+	}
+}

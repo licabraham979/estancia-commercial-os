@@ -1,6 +1,7 @@
 <script>
 
 import { goto } from '$app/navigation';
+import { eliminarCliente } from '$lib/stores/clientes.svelte.js';
 
 let {
     id,
@@ -12,6 +13,16 @@ let {
 
 function abrirCliente() {
     goto(`/crm/clientes/${id}`);
+}
+
+function eliminarClienteDeLista() {
+    const confirmado = window.confirm(
+        `¿Eliminar a ${nombre} de la lista de clientes? Esta acción no elimina cotizaciones ni propuestas.`
+    );
+
+    if (confirmado) {
+        eliminarCliente(id);
+    }
 }
 
 </script>
@@ -57,6 +68,10 @@ Valor estimado
 
 <button onclick={abrirCliente}>
     Ver ficha
+</button>
+
+<button class="eliminar" onclick={eliminarClienteDeLista}>
+    Eliminar cliente
 </button>
 
 </div>
@@ -183,6 +198,11 @@ color:white;
 
 cursor:pointer;
 
+}
+
+button.eliminar {
+    margin-top: var(--space-2);
+    background: #b91c1c;
 }
 
 

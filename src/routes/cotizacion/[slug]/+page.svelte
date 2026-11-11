@@ -3,6 +3,18 @@
 
 	const { cotizacion, opciones, fotos } = data;
 
+	/** @type {{ url: string, alt: string } | null} */
+	let imagenAmpliada = $state(null);
+
+	/** @param {string} url @param {string} alt */
+	function abrirImagen(url, alt) {
+		imagenAmpliada = { url, alt };
+	}
+
+	function cerrarImagen() {
+		imagenAmpliada = null;
+	}
+
 /** @param {number | string | null | undefined} valor */
 const formatoMoneda = (valor) =>
 	new Intl.NumberFormat('es-HN', {
@@ -11,6 +23,10 @@ const formatoMoneda = (valor) =>
 		minimumFractionDigits: 2
 	}).format(Number(valor ?? 0));
 </script>
+
+<svelte:window onkeydown={(event) => {
+	if (event.key === 'Escape') cerrarImagen();
+}} />
 
 <svelte:head>
 	<title>{cotizacion.titulo} | Estancia Comercial</title>
@@ -75,13 +91,18 @@ const formatoMoneda = (valor) =>
 			<section class="mb-12 grid gap-5 md:grid-cols-2">
 
 				{#each fotos as foto}
-					<div class="overflow-hidden rounded-3xl bg-white shadow-sm">
+					<button
+						type="button"
+						class="image-click overflow-hidden rounded-3xl bg-white shadow-sm"
+						aria-label="Ampliar imagen del proyecto"
+						onclick={() => abrirImagen(foto.url, 'Imagen del proyecto')}
+					>
 						<img
 							src={foto.url}
 							alt="Imagen del proyecto"
 							class="h-72 w-full object-cover"
 						/>
-					</div>
+					</button>
 				{/each}
 
 			</section>
@@ -115,11 +136,18 @@ const formatoMoneda = (valor) =>
 
 						{#if opcion.imagen_url}
 
-							<img
-								src={opcion.imagen_url}
-								alt={opcion.nombre}
-								class="h-52 w-full object-cover"
-							/>
+							<button
+								type="button"
+								class="image-click block w-full"
+								aria-label={`Ampliar imagen de ${opcion.nombre}`}
+								onclick={() => abrirImagen(opcion.imagen_url, opcion.nombre)}
+							>
+								<img
+									src={opcion.imagen_url}
+									alt={opcion.nombre}
+									class="h-52 w-full object-cover"
+								/>
+							</button>
 
 						{/if}
 
@@ -228,6 +256,28 @@ const formatoMoneda = (valor) =>
 
 	</main>
 
+	{#if imagenAmpliada}
+		<div class="lightbox">
+			<button
+				type="button"
+				class="lightbox-backdrop"
+				aria-label="Cerrar imagen ampliada"
+				onclick={cerrarImagen}
+			></button>
+
+			<div class="lightbox-content" role="dialog" aria-modal="true" aria-label="Imagen ampliada">
+				<button
+					type="button"
+					class="lightbox-close"
+					aria-label="Cerrar"
+					onclick={cerrarImagen}
+				>✕</button>
+
+				<img src={imagenAmpliada.url} alt={imagenAmpliada.alt} />
+				<p>{imagenAmpliada.alt}</p>
+			</div>
+		</div>
+	{/if}
 
 	<footer class="border-t border-slate-200 bg-white py-8">
 
@@ -246,5 +296,79 @@ const formatoMoneda = (valor) =>
 	.recomendada {
 		border-color: rgb(6 182 212);
 		box-shadow: 0 10px 35px rgba(6, 182, 212, 0.12);
+	}
+
+	.image-click {
+		cursor: zoom-in;
+		text-align: left;
+	}
+
+	.lightbox {
+		position: fixed;
+		inset: 0;
+		z-index: 1000;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 24px;
+	}
+
+	.lightbox-backdrop {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		border: 0;
+		background: rgba(2, 6, 23, 0.92);
+		cursor: zoom-out;
+	}
+
+	.lightbox-content {
+		position: relative;
+		z-index: 1;
+		max-width: min(1100px, 100%);
+		max-height: 100%;
+		text-align: center;
+	}
+
+	.lightbox-content img {
+		max-width: 100%;
+		max-height: calc(100vh - 110px);
+		margin: auto;
+		border-radius: 12px;
+		object-fit: contain;
+	}
+
+	.lightbox-content p {
+		margin-top: 10px;
+		color: white;
+		font-size: 14px;
+	}
+
+	.lightbox-close {
+		position: absolute;
+		top: -16px;
+		right: -16px;
+		z-index: 2;
+		width: 40px;
+		height: 40px;
+		border: 1px solid rgba(255,255,255,.35);
+		border-radius: 50%;
+		background: white;
+		color: #0f172a;
+		font-size: 18px;
+		font-weight: 800;
+		cursor: pointer;
+	}
+
+	@media (max-width: 640px) {
+		.lightbox {
+			padding: 14px;
+		}
+
+		.lightbox-close {
+			top: -12px;
+			right: -8px;
+		}
 	}
 </style>
