@@ -177,6 +177,147 @@ function validarSnapshot(payload) {
 	}
 }
 
+
+/** @param {unknown} payload */
+function validarEvento(payload) {
+	if (!esObjeto(payload)) {
+		throw new Error('Formato de evento inválido.');
+	}
+
+	if (
+		payload.source !== 'estancia_mt5' ||
+		payload.message_type !== 'event' ||
+		payload.schema_version !== 1
+	) {
+		throw new Error('Origen, tipo o versión del evento inválidos.');
+	}
+
+	if (
+		typeof payload.script_version !== 'string' ||
+		payload.script_version.length < 1 ||
+		payload.script_version.length > 100
+	) {
+		throw new Error('Versión del EA inválida.');
+	}
+
+	if (typeof payload.market !== 'string' || !ALLOWED_MARKETS.includes(payload.market)) {
+		throw new Error('Mercado no autorizado.');
+	}
+
+	if (
+		typeof payload.tv_symbol !== 'string' ||
+		payload.tv_symbol.length < 1 ||
+		payload.tv_symbol.length > 100
+	) {
+		throw new Error('Símbolo del evento inválido.');
+	}
+
+	if (
+		typeof payload.event_id !== 'string' ||
+		payload.event_id.length < 1 ||
+		payload.event_id.length > 200 ||
+		typeof payload.setup_id !== 'string' ||
+		payload.setup_id.length < 1 ||
+		payload.setup_id.length > 200
+	) {
+		throw new Error('Identificador del evento o setup inválido.');
+	}
+
+	const eventTypes = [
+		'ENTRY_SETUP_STARTED',
+		'ENTRY_SETUP_CONFIRMED',
+		'ENTRY_SETUP_CANCELLED',
+		'ENTRY_SETUP_EXPIRED',
+		'ENTRY_SETUP_MAX_MOVE'
+	];
+
+	if (
+		typeof payload.event_type !== 'string' ||
+		!eventTypes.includes(payload.event_type) ||
+		payload.category !== 'ENTRY'
+	) {
+		throw new Error('Tipo o categoría del evento inválidos.');
+	}
+
+	if (typeof payload.side !== 'string' || !['BUY', 'SELL'].includes(payload.side)) {
+		throw new Error('Dirección del evento inválida.');
+	}
+
+	if (typeof payload.route !== 'string' || !['TRADITIONAL', 'EARLY'].includes(payload.route)) {
+		throw new Error('Ruta del evento inválida.');
+	}
+
+	if (
+		payload.timing !== 'M1_CLOSE' ||
+		payload.chart_timeframe !== 'M1'
+	) {
+		throw new Error('Temporalidad o momento del evento inválidos.');
+	}
+
+	if (
+		typeof payload.reason !== 'string' ||
+		payload.reason.length < 1 ||
+		payload.reason.length > 500
+	) {
+		throw new Error('Motivo del evento inválido.');
+	}
+
+	for (const field of ['previous_state', 'new_state', 'wait_bars']) {
+		if (!Number.isSafeInteger(payload[field])) {
+			throw new Error(`Campo ${field} inválido.`);
+		}
+	}
+
+	if (typeof payload.wait_bars !== 'number' || payload.wait_bars < 0) {
+		throw new Error('Espera de velas inválida.');
+	}
+
+	if (
+		!esNumero(payload.event_price) ||
+		payload.event_price <= 0 ||
+		!esNumero(payload.reference_price) ||
+		payload.reference_price <= 0
+	) {
+		throw new Error('Precios del evento inválidos.');
+	}
+
+	if (
+		payload.confirmation_price !== null &&
+		(!esNumero(payload.confirmation_price) || payload.confirmation_price <= 0)
+	) {
+		throw new Error('Precio de confirmación inválido.');
+	}
+
+	if (!esNumero(payload.move_pct)) {
+		throw new Error('Movimiento porcentual inválido.');
+	}
+
+	if (typeof payload.preferred_move_reached !== 'boolean') {
+		throw new Error('Estado del movimiento preferido inválido.');
+	}
+
+	if (!esTiempo(payload.event_time_ms)) {
+		throw new Error('Hora del evento inválida.');
+	}
+
+	if (
+		payload.atr_ratio !== null &&
+		(!esNumero(payload.atr_ratio) || payload.atr_ratio <= 0)
+	) {
+		throw new Error('Relación ATR inválida.');
+	}
+
+	if (!esObjeto(payload.context)) {
+		throw new Error('Contexto del evento inválido.');
+	}
+
+	for (const name of ['M1', 'M5', 'M15', 'M30']) {
+		if (!esObjeto(payload.context[name])) {
+			throw new Error(`Falta el contexto ${name}.`);
+		}
+	}
+}
+
 export async function POST({ request, params }) {
 	try {
 		const expectedToken = env.MT5_WEBHOOK_TOKEN;
@@ -227,8 +368,72 @@ export async function POST({ request, params }) {
 			);
 		}
 
+
+		if (esObjeto(payload) && payload.message_type === 'event') {
+			try {
+				validarEvento(payload);
+			} catch (error) {
+				return json(
+					{
+						error: error instanceof Error
+							? error.message
+							: 'Evento inválido.'
+					},
+					{ status: 400 }
+				);
+			}
+
+			const evento = {
+				owner_id: ownerId,
+				lote_id: null,
+				event_id: payload.event_id,
+				category: payload.category,
+				market: payload.market,
+				tv_symbol: payload.tv_symbol,
+				event_type: payload.event_type,
+				side: payload.side,
+				route: payload.route,
+				timing: payload.timing,
+				event_price: payload.event_price,
+				reference_price: payload.reference_price,
+				confirmation_price: payload.confirmation_price,
+				atr_ratio: payload.atr_ratio,
+				event_time_ms: payload.event_time_ms,
+				chart_timeframe: payload.chart_timeframe,
+				raw_event: payload
+			};
+
+			const { data, error: eventoError } = await supabaseServer
+				.from('trading_eventos')
+				.upsert(evento, {
+					onConflict: 'owner_id,event_id',
+					ignoreDuplicates: true
+				})
+				.select('id');
+
+			if (eventoError) {
+				console.error('MT5: error guardando evento:', eventoError);
+				return json(
+					{ error: 'No se pudo guardar el evento.' },
+					{ status: 500 }
+				);
+			}
+
+			const eventoNuevo = data?.length > 0;
+
+			return json({
+				success: true,
+				duplicate: !eventoNuevo,
+				evento_id: eventoNuevo ? data[0].id : null,
+				event_id: payload.event_id,
+				market: payload.market,
+				event_type: payload.event_type
+			});
+		}
+
 		try {
 			validarSnapshot(payload);
+
 		} catch (error) {
 			return json(
 				{
